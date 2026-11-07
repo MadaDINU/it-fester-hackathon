@@ -22,6 +22,8 @@ Rulăm build-ul de producție local: e mai rapid și mai stabil decât `npm run 
 
 `npm run demo:check` verifică aceste variabile fără să le afișeze valorile.
 
+> **Rulează `npm run demo:reset` după fiecare repetiție și cu 15 minute înainte de jurizare.** Readuce brandul demo la starea curată, fără apeluri AI.
+
 ## 2. Pași
 
 ```bash
