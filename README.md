@@ -1,4 +1,17 @@
+<p align="center"><img src="public/brand/loopwise-icon.png" width="96" height="96" alt="Loopwise logo"></p>
+
 # Loopwise
+
+**Live app:** https://loopwise-ruddy.vercel.app
+
+Loopwise is a team of AI agents that relaunches and grows an Instagram account from its real audience data.
+It builds personas from the account's demographics, writes posts and reels, tests them on a synthetic focus group and a model trained on the account's history, then learns from every result.
+
+- Slides content: [docs/PITCH-SLIDES.md](docs/PITCH-SLIDES.md)
+- Running the demo: [docs/LOCAL-DEMO.md](docs/LOCAL-DEMO.md)
+- For judges and organizers: [docs/SUBMISSION.md](docs/SUBMISSION.md)
+
+> The main demo runs locally (`npm run demo:build && npm run demo:start`); the production URL above is the backup.
 
 **Predict before you post. Learn after you post.**
 
