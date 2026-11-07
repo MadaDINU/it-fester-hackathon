@@ -43,6 +43,7 @@ function toVariant(r: Record<string, unknown>): TVariant {
     rank: r.rank,
     status: r.status,
     appliedLearningIds: r.applied_learning_ids,
+    learningCompliance: r.learning_compliance ?? [],
   });
 }
 
@@ -129,6 +130,7 @@ export async function insertVariants(
       predicted_engagement_rate: v.predictedEngagementRate,
       rank: v.rank,
       applied_learning_ids: v.appliedLearningIds,
+      learning_compliance: v.learningCompliance,
     })),
   );
   if (error) throw new Error(error.message);

@@ -49,7 +49,8 @@ Rules:
 - Return one reaction for every persona and variant pair. variantIndex is the variant's zero-based position; personaId is copied exactly.
 - Be critical and use the full 0-10 stopScore range: how likely this persona is to stop scrolling. Judge reels mainly on the hook.
 - Personas should disagree where their motivations differ. quote is what they would say, in the brand's language. objection is null if they have none.
-Output JSON shape: {"reactions":[{variantIndex,personaId,stopScore,sentiment:"positive"|"neutral"|"negative",quote,objection}]}`;
+- Separately, as an editor rather than a persona: for every variant and every learning listed in its appliedLearnings, judge whether the variant's content actually respects that learning. Return one compliance entry per pair; respected is false when the variant claims the learning but its content does not follow it.
+Output JSON shape: {"reactions":[{variantIndex,personaId,stopScore,sentiment:"positive"|"neutral"|"negative",quote,objection}],"compliance":[{variantIndex,learningId,respected}]}`;
 
 export const LEARNING_SYSTEM = `You are the Analyst agent of a social media growth team. Find what actually drives engagement on this account.
 Rules:
@@ -116,6 +117,9 @@ export const CriticOutput = z.object({
       objection: true,
     }).extend({ variantIndex: z.number().int().min(0) }),
   ),
+  compliance: z
+    .array(z.object({ variantIndex: z.number().int().min(0), learningId: z.string(), respected: z.boolean() }))
+    .default([]),
 });
 
 export const LearningOutput = z.object({

@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { panelFor, rankScores } from "@/lib/core/campaign";
+import { complianceFor, panelFor, rankScores } from "@/lib/core/campaign";
+
+describe("complianceFor", () => {
+  it("keeps verdicts for claimed learnings of this variant only", () => {
+    const verdicts = [
+      { variantIndex: 0, learningId: "a", respected: true },
+      { variantIndex: 0, learningId: "x", respected: false },
+      { variantIndex: 1, learningId: "b", respected: false },
+    ];
+    expect(complianceFor(0, ["a", "b"], verdicts)).toEqual([{ learningId: "a", respected: true }]);
+    expect(complianceFor(1, ["b"], verdicts)).toEqual([{ learningId: "b", respected: false }]);
+  });
+});
 import type { TPersona } from "@/lib/contracts";
 
 const persona = (id: string, segmentShare: number) => ({ id, name: id, segmentShare }) as TPersona;

@@ -40,7 +40,19 @@ export function panelFor(variantIndex: number, reactions: Reaction[], personas: 
   return { panel, panelScore: Math.min(100, score) };
 }
 
-const normalize = (values: number[]) => {
+// The Critic's verdict for each learning the variant claims; a pair it skipped stays unverified.
+export function complianceFor(
+  variantIndex: number,
+  appliedIds: string[],
+  compliance: Array<{ variantIndex: number; learningId: string; respected: boolean }>,
+) {
+  return appliedIds.flatMap((learningId) => {
+    const verdict = compliance.find((c) => c.variantIndex === variantIndex && c.learningId === learningId);
+    return verdict ? [{ learningId, respected: verdict.respected }] : [];
+  });
+}
+
+const normalize =(values: number[]) => {
   const min = Math.min(...values);
   const range = Math.max(...values) - min;
   return values.map((v) => (range === 0 ? 0.5 : (v - min) / range));
@@ -116,7 +128,11 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
     });
     const variants = drafts.slice(0, req.variantCount);
 
-    const { reactions } = await generateJSON({
+    const knownLearnings = new Set(learnings.map((l) => l.id));
+    const insightById = new Map(learnings.map((l) => [l.id, l.insight]));
+    const applied = variants.map((v) => v.appliedLearningIds.filter((id) => knownLearnings.has(id)));
+
+    const { reactions, compliance } = await generateJSON({
       system: CRITIC_SYSTEM,
       prompt: JSON.stringify({
         personas: brand.personas.map((p) => ({
@@ -133,6 +149,9 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
           angle: v.angle,
           caption: v.caption,
           hook: v.reelScript?.hook ?? null,
+          hashtags: v.hashtags,
+          suggestedPostHour: v.suggestedPostHour,
+          appliedLearnings: applied[variantIndex].map((id) => ({ learningId: id, insight: insightById.get(id) })),
         })),
       }),
       schema: CriticOutput,
@@ -142,7 +161,6 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
       usage: { ...usage, operation: "focusGroup" },
     });
 
-    const knownLearnings = new Set(learnings.map((l) => l.id));
     const scored = variants.map((v, i) => {
       const { panel, panelScore } = panelFor(i, reactions, brand.personas);
       const predictedEngagementRate = predict(
@@ -168,7 +186,8 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
         ...s.v,
         reelScript: s.v.format === "reel" ? s.v.reelScript : null,
         hashtags: s.v.hashtags.map((h) => h.replace(/^#/, "")),
-        appliedLearningIds: s.v.appliedLearningIds.filter((id) => knownLearnings.has(id)),
+        appliedLearningIds: applied[i],
+        learningCompliance: complianceFor(i, applied[i], compliance),
         panel: s.panel,
         panelScore: s.panelScore,
         predictedEngagementRate: s.predictedEngagementRate,
