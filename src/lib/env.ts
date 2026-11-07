@@ -35,7 +35,8 @@ const EnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optional,
 
   IG_DATA_MODE: mode(["live", "mock"], "mock"),
-  IG_API_VERSION: optional,
+  IG_GRAPH_HOST: mode(["auto", "facebook", "instagram"], "auto"),
+  IG_API_VERSION: z.preprocess((v) => (v === "" ? undefined : v), z.string().default("v27.0")),
   IG_MAIN_USER_ID: optional,
   IG_MAIN_ACCESS_TOKEN: optional,
   IG_PUBLISH_USER_ID: optional,

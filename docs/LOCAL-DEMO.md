@@ -14,7 +14,8 @@ Rulăm build-ul de producție local: e mai rapid și mai stabil decât `npm run 
 | `ANTHROPIC_MODEL` / `ANTHROPIC_MODEL_FAST` | `claude-sonnet-5-5` / `claude-haiku-5-5` (implicite) |
 | `AI_BUDGET_EUR` | `4`; peste prag, apelurile reale primesc 402 |
 | `IG_DATA_MODE` | `live` cu token sau `mock` pentru snapshotul salvat |
-| `IG_MAIN_ACCESS_TOKEN`, `IG_MAIN_USER_ID` | tokenul contului; ID-ul poate lipsi, se ia din `/me` |
+| `IG_MAIN_ACCESS_TOKEN`, `IG_MAIN_USER_ID` | tokenul contului; ID-ul poate lipsi și se descoperă automat |
+| `IG_GRAPH_HOST` | `auto` (încearcă graph.facebook.com, apoi graph.instagram.com) |
 | `PUBLISH_MODE` | `mock`, ca să nu se publice nimic din greșeală |
 
 `npm run demo:check` verifică aceste variabile fără să le afișeze valorile.
@@ -31,6 +32,8 @@ npm run demo:check      # în alt terminal: PASS/FAIL și linkurile directe
 Dimineața, o singură dată, cu tokenul Instagram:
 
 ```bash
+node --env-file=.env.local --import tsx scripts/ig-probe.ts        # verifică tokenul: host, profil, o postare
+
 node --env-file=.env.local --import tsx scripts/ig-snapshot.ts     # salvează snapshotul real în data/
 node --env-file=.env.local --import tsx scripts/prepare-demo.ts    # brand + learnings + campanie + community
 ```

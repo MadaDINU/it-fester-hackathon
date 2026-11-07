@@ -4,24 +4,29 @@ import { mockIgSnapshot } from "@/lib/ai/fixtures";
 import { FromInstagramRequest, IgSnapshot, type TIgMedia, type TIgSnapshot } from "@/lib/contracts";
 import { env } from "@/lib/env";
 
-// Instagram API with Instagram Login (graph.instagram.com). Endpoint, field and metric names
-// were checked against developers.facebook.com on 2026-11-07, where the latest version is v27.0.
+// Reads an Instagram professional account through one of two official hosts, both checked
+// against developers.facebook.com on 2026-11-07 (latest version v27.0):
+// - facebook: graph.facebook.com (Instagram API with Facebook Login / Unified Login). The IG
+//   account id comes from /me/accounts?fields=instagram_business_account. caption and
+//   media_product_type are available here.
+// - instagram: graph.instagram.com (Instagram API with Instagram Login). caption and
+//   media_product_type are documented as Facebook Login only, so a 400 retries without them.
 // This module only reads. Tokens, URLs carrying tokens and comment texts are never logged.
 
-const DEFAULT_VERSION = "v27.0";
 const TIMEOUT_MS = 10_000;
 const CONCURRENCY = 5;
 const PAGE_SIZE = 50;
 const TOP_MEDIA_FOR_COMMENTS = 10;
 const COMMENTS_PER_MEDIA = 20;
 
-const PROFILE_FIELDS = "user_id,username,name,biography,website,followers_count,media_count";
-const PROFILE_FIELDS_MIN = "user_id,username,name,followers_count,media_count";
+const PROFILE_FIELDS = "username,name,biography,website,followers_count,media_count";
+const PROFILE_FIELDS_MIN_IG = "user_id,username,name,followers_count,media_count";
 const MEDIA_FIELDS =
   "id,caption,media_type,media_product_type,permalink,thumbnail_url,timestamp,like_count,comments_count";
-// caption and media_product_type are documented for Facebook Login only; retried without them.
 const MEDIA_FIELDS_MIN = "id,media_type,permalink,thumbnail_url,timestamp,like_count,comments_count";
 const MEDIA_METRICS = "reach,saved,shares,views,total_interactions";
+
+export type GraphHost = "facebook" | "instagram";
 
 export class InstagramApiError extends Error {
   name = "InstagramApiError";
@@ -29,18 +34,25 @@ export class InstagramApiError extends Error {
     message: string,
     readonly status: number,
     readonly code?: number,
+    readonly type?: string,
   ) {
     super(message);
   }
 }
 
 type Json = Record<string, unknown>;
+type Client = { host: GraphHost; base: string; token: string };
 
-function apiBase() {
-  return `https://graph.instagram.com/${env.IG_API_VERSION ?? DEFAULT_VERSION}`;
+const ORIGIN: Record<GraphHost, string> = {
+  facebook: "https://graph.facebook.com",
+  instagram: "https://graph.instagram.com",
+};
+
+function client(host: GraphHost, token: string): Client {
+  return { host, base: `${ORIGIN[host]}/${env.IG_API_VERSION}`, token };
 }
 
-// GET with a 10 s timeout and one retry on 429/5xx. The error message never contains the URL.
+// GET with a 10 s timeout and one retry on 429/5xx or a network error. Errors never contain the URL.
 async function request(url: string): Promise<Json> {
   for (let attempt = 0; ; attempt++) {
     let response: Response;
@@ -53,23 +65,36 @@ async function request(url: string): Promise<Json> {
     const body = (await response.json().catch(() => ({}))) as Json;
     if (response.ok) return body;
     if (attempt === 0 && (response.status === 429 || response.status >= 500)) continue;
-    const error = (body.error ?? {}) as { message?: string; code?: number };
-    throw new InstagramApiError(error.message ?? `Instagram API error (HTTP ${response.status})`, response.status, error.code);
+    const error = (body.error ?? {}) as { message?: string; code?: number; type?: string };
+    throw new InstagramApiError(
+      error.message ?? `Instagram API error (HTTP ${response.status})`,
+      response.status,
+      error.code,
+      error.type,
+    );
   }
 }
 
-function get(path: string, params: Record<string, string>, token: string): Promise<Json> {
-  const query = new URLSearchParams({ ...params, access_token: token });
-  return request(`${apiBase()}/${path}?${query}`);
+function get(c: Client, path: string, params: Record<string, string>): Promise<Json> {
+  const query = new URLSearchParams({ ...params, access_token: c.token });
+  return request(`${c.base}/${path}?${query}`);
 }
 
-async function getWithFallback(path: string, fields: string, fallback: string, extra: Record<string, string>, token: string) {
+async function getWithFallback(c: Client, path: string, fields: string, fallback: string, extra: Record<string, string> = {}) {
   try {
-    return { body: await get(path, { fields, ...extra }, token), full: true };
+    return { body: await get(c, path, { fields, ...extra }), full: true };
   } catch (err) {
-    if (!(err instanceof InstagramApiError) || err.status !== 400) throw err;
-    return { body: await get(path, { fields: fallback, ...extra }, token), full: false };
+    if (!(err instanceof InstagramApiError) || err.status !== 400 || fields === fallback) throw err;
+    return { body: await get(c, path, { fields: fallback, ...extra }), full: false };
   }
+}
+
+// Token problems on graph.facebook.com (code 190 or 102, OAuthException) mean "try the other host".
+export function isAuthError(err: unknown): boolean {
+  return (
+    err instanceof InstagramApiError &&
+    (err.code === 190 || err.code === 102 || err.type === "OAuthException" || err.status === 401)
+  );
 }
 
 async function mapLimit<T, R>(items: T[], limit: number, run: (item: T) => Promise<R>): Promise<R[]> {
@@ -93,15 +118,57 @@ const url = (v: unknown): string | null => {
   return s && URL.canParse(s) ? s : null;
 };
 
+type Profile = { userId: string; me: Json; full: boolean };
+
+async function facebookProfile(c: Client): Promise<Profile> {
+  let userId = env.IG_MAIN_USER_ID ?? null;
+  if (!userId) {
+    const pages = await get(c, "me/accounts", { fields: "instagram_business_account" });
+    const linked = ((pages.data ?? []) as Json[]).find((p) => (p.instagram_business_account as Json | undefined)?.id);
+    userId = linked ? String((linked.instagram_business_account as Json).id) : null;
+  }
+  if (!userId) {
+    // A token issued for the Instagram account itself (Unified Login) can answer /me directly.
+    const me = await get(c, "me", { fields: `id,${PROFILE_FIELDS}` });
+    if (!str(me.username)) throw new InstagramApiError("No Instagram account is linked to this token", 400);
+    return { userId: String(me.id), me, full: true };
+  }
+  const { body, full } = await getWithFallback(c, userId, PROFILE_FIELDS, "username,followers_count,media_count");
+  return { userId, me: body, full };
+}
+
+async function instagramProfile(c: Client): Promise<Profile> {
+  const { body, full } = await getWithFallback(c, "me", `user_id,${PROFILE_FIELDS}`, PROFILE_FIELDS_MIN_IG);
+  const userId = env.IG_MAIN_USER_ID ?? str(body.user_id) ?? str(body.id);
+  if (!userId) throw new InstagramApiError("Instagram did not return a user id", 502);
+  return { userId, me: body, full };
+}
+
+// Picks the host. auto tries graph.facebook.com first and falls back on token errors only.
+export async function connect(token: string): Promise<{ c: Client; profile: Profile }> {
+  if (env.IG_GRAPH_HOST === "instagram") {
+    const c = client("instagram", token);
+    return { c, profile: await instagramProfile(c) };
+  }
+  const fb = client("facebook", token);
+  try {
+    return { c: fb, profile: await facebookProfile(fb) };
+  } catch (err) {
+    if (env.IG_GRAPH_HOST === "facebook" || !isAuthError(err)) throw err;
+  }
+  const ig = client("instagram", token);
+  return { c: ig, profile: await instagramProfile(ig) };
+}
+
 function metricValue(entry: Json): number | null {
   const values = entry.values as Array<{ value?: unknown }> | undefined;
   return int((entry.total_value as { value?: unknown } | undefined)?.value ?? values?.[0]?.value);
 }
 
 // An error or an empty data set means insights are unavailable for this media.
-async function fetchInsights(mediaId: string, token: string): Promise<TIgMedia["insights"]> {
+async function fetchInsights(c: Client, mediaId: string): Promise<TIgMedia["insights"]> {
   try {
-    const body = await get(`${mediaId}/insights`, { metric: MEDIA_METRICS }, token);
+    const body = await get(c, `${mediaId}/insights`, { metric: MEDIA_METRICS });
     const data = (body.data ?? []) as Json[];
     if (data.length === 0) return null;
     const value = (name: string) => {
@@ -120,61 +187,53 @@ async function fetchInsights(mediaId: string, token: string): Promise<TIgMedia["
   }
 }
 
-async function fetchMedia(userId: string, limit: number, token: string): Promise<TIgMedia[]> {
-  const first = await getWithFallback(
-    `${userId}/media`,
-    MEDIA_FIELDS,
-    MEDIA_FIELDS_MIN,
-    { limit: String(Math.min(PAGE_SIZE, limit)) },
-    token,
-  );
+function toMedia(m: Json): TIgMedia {
+  const mediaType = m.media_type === "CAROUSEL_ALBUM" || m.media_type === "VIDEO" ? m.media_type : "IMAGE";
+  return {
+    id: String(m.id),
+    caption: str(m.caption),
+    mediaType,
+    mediaProductType: str(m.media_product_type),
+    permalink: url(m.permalink),
+    thumbnailUrl: url(m.thumbnail_url),
+    timestamp: String(m.timestamp),
+    likeCount: int(m.like_count),
+    commentsCount: int(m.comments_count),
+    insights: null,
+  };
+}
+
+async function fetchMedia(c: Client, userId: string, limit: number): Promise<TIgMedia[]> {
+  const first = await getWithFallback(c, `${userId}/media`, MEDIA_FIELDS, c.host === "instagram" ? MEDIA_FIELDS_MIN : MEDIA_FIELDS, {
+    limit: String(Math.min(PAGE_SIZE, limit)),
+  });
   const rows: Json[] = [];
   let page: Json = first.body;
   for (;;) {
     rows.push(...((page.data ?? []) as Json[]));
     const next = (page.paging as { next?: string } | undefined)?.next;
-    if (rows.length >= limit || !next || !next.startsWith("https://graph.instagram.com/")) break;
+    if (rows.length >= limit || !next || !next.startsWith(`${ORIGIN[c.host]}/`)) break;
     page = await request(next);
   }
-
-  const media = rows.slice(0, limit).map((m) => {
-    const mediaType = m.media_type === "CAROUSEL_ALBUM" || m.media_type === "VIDEO" ? m.media_type : "IMAGE";
-    return {
-      id: String(m.id),
-      caption: str(m.caption),
-      mediaType,
-      mediaProductType: str(m.media_product_type),
-      permalink: url(m.permalink),
-      thumbnailUrl: url(m.thumbnail_url),
-      timestamp: String(m.timestamp),
-      likeCount: int(m.like_count),
-      commentsCount: int(m.comments_count),
-      insights: null,
-    } satisfies TIgMedia;
-  });
-
-  const insights = await mapLimit(media, CONCURRENCY, (m) => fetchInsights(m.id, token));
+  const media = rows.slice(0, limit).map(toMedia);
+  const insights = await mapLimit(media, CONCURRENCY, (m) => fetchInsights(c, m.id));
   return media.map((m, i) => ({ ...m, insights: insights[i] }));
 }
 
 // Comment text only: usernames are never requested.
-async function fetchComments(media: TIgMedia[], token: string): Promise<TIgSnapshot["comments"]> {
+async function fetchComments(c: Client, media: TIgMedia[]): Promise<TIgSnapshot["comments"]> {
   const top = [...media]
     .filter((m) => (m.commentsCount ?? 0) > 0)
     .sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0))
     .slice(0, TOP_MEDIA_FOR_COMMENTS);
   const perMedia = await mapLimit(top, CONCURRENCY, async (m) => {
     try {
-      const { body } = await getWithFallback(
-        `${m.id}/comments`,
-        "id,text,timestamp,like_count",
-        "id,text,timestamp",
-        { limit: String(COMMENTS_PER_MEDIA) },
-        token,
-      );
-      return ((body.data ?? []) as Json[]).slice(0, COMMENTS_PER_MEDIA).flatMap((c) =>
-        str(c.text)
-          ? [{ id: String(c.id), mediaId: m.id, text: String(c.text), likeCount: int(c.like_count), timestamp: String(c.timestamp) }]
+      const { body } = await getWithFallback(c, `${m.id}/comments`, "id,text,timestamp,like_count", "id,text,timestamp", {
+        limit: String(COMMENTS_PER_MEDIA),
+      });
+      return ((body.data ?? []) as Json[]).slice(0, COMMENTS_PER_MEDIA).flatMap((x) =>
+        str(x.text)
+          ? [{ id: String(x.id), mediaId: m.id, text: String(x.text), likeCount: int(x.like_count), timestamp: String(x.timestamp) }]
           : [],
       );
     } catch {
@@ -186,12 +245,14 @@ async function fetchComments(media: TIgMedia[], token: string): Promise<TIgSnaps
 
 type Breakdown = Array<{ dims: string[]; value: number }>;
 
-async function followerBreakdown(userId: string, breakdown: string, token: string): Promise<Breakdown> {
-  const body = await get(
-    `${userId}/insights`,
-    { metric: "follower_demographics", period: "lifetime", metric_type: "total_value", timeframe: "last_30_days", breakdown },
-    token,
-  );
+async function followerBreakdown(c: Client, userId: string, breakdown: string): Promise<Breakdown> {
+  const body = await get(c, `${userId}/insights`, {
+    metric: "follower_demographics",
+    period: "lifetime",
+    metric_type: "total_value",
+    timeframe: "last_30_days",
+    breakdown,
+  });
   const results = (((body.data as Json[] | undefined)?.[0]?.total_value as Json | undefined)?.breakdowns as Json[] | undefined)?.[0]
     ?.results as Array<{ dimension_values?: string[]; value?: number }> | undefined;
   if (!results?.length) throw new Error("no demographics");
@@ -200,18 +261,16 @@ async function followerBreakdown(userId: string, breakdown: string, token: strin
 
 function toShares(rows: Breakdown, name: (dims: string[]) => string) {
   const total = rows.reduce((s, r) => s + r.value, 0) || 1;
-  return rows
-    .map((r) => ({ name: name(r.dims), share: r.value / total }))
-    .sort((a, b) => b.share - a.share);
+  return rows.map((r) => ({ name: name(r.dims), share: r.value / total })).sort((a, b) => b.share - a.share);
 }
 
 // Optional: Meta returns no demographics under 100 followers. Any failure gives null.
-async function fetchDemographics(userId: string, token: string): Promise<TIgSnapshot["demographics"]> {
+async function fetchDemographics(c: Client, userId: string): Promise<TIgSnapshot["demographics"]> {
   try {
     const [ageGender, cities, countries] = await Promise.all([
-      followerBreakdown(userId, "age,gender", token),
-      followerBreakdown(userId, "city", token),
-      followerBreakdown(userId, "country", token),
+      followerBreakdown(c, userId, "age,gender"),
+      followerBreakdown(c, userId, "city"),
+      followerBreakdown(c, userId, "country"),
     ]);
     return {
       ageGender: toShares(ageGender, ([age, gender]) => `${gender}.${age}`).map((r) => ({ bucket: r.name, share: r.share })),
@@ -224,9 +283,9 @@ async function fetchDemographics(userId: string, token: string): Promise<TIgSnap
 }
 
 // online_followers is not in the current metrics table; it is tried and may return null.
-async function fetchOnlineHours(userId: string, token: string): Promise<number[] | null> {
+async function fetchOnlineHours(c: Client, userId: string): Promise<number[] | null> {
   try {
-    const body = await get(`${userId}/insights`, { metric: "online_followers", period: "lifetime" }, token);
+    const body = await get(c, `${userId}/insights`, { metric: "online_followers", period: "lifetime" });
     const values = ((body.data as Json[] | undefined)?.[0]?.values ?? []) as Array<{ value?: Record<string, number> }>;
     const byHour = values.at(-1)?.value;
     if (!byHour) return null;
@@ -237,19 +296,22 @@ async function fetchOnlineHours(userId: string, token: string): Promise<number[]
   }
 }
 
-async function fetchLive(limit: number): Promise<TIgSnapshot> {
+function requireToken(): string {
   const token = env.IG_MAIN_ACCESS_TOKEN;
   if (!token) throw new Error("IG_MAIN_ACCESS_TOKEN is not set");
+  return token;
+}
 
-  const { body: me, full } = await getWithFallback("me", PROFILE_FIELDS, PROFILE_FIELDS_MIN, {}, token);
-  const userId = env.IG_MAIN_USER_ID ?? str(me.user_id) ?? str(me.id);
-  if (!userId) throw new InstagramApiError("Instagram did not return a user id", 502);
+async function fetchLive(limit: number): Promise<TIgSnapshot> {
+  const { c, profile } = await connect(requireToken());
+  console.info(`instagram: reading from graph.${c.host}.com`);
+  const { userId, me, full } = profile;
 
-  const media = await fetchMedia(userId, limit, token);
+  const media = await fetchMedia(c, userId, limit);
   const [comments, demographics, onlineHours] = await Promise.all([
-    fetchComments(media, token),
-    fetchDemographics(userId, token),
-    fetchOnlineHours(userId, token),
+    fetchComments(c, media),
+    fetchDemographics(c, userId),
+    fetchOnlineHours(c, userId),
   ]);
 
   return IgSnapshot.parse({
@@ -269,6 +331,26 @@ async function fetchLive(limit: number): Promise<TIgSnapshot> {
     fetchedAt: new Date().toISOString(),
     mode: "live",
   });
+}
+
+// Minimal read for scripts/ig-probe.ts: profile plus one media with insights.
+export async function probeInstagram() {
+  const { c, profile } = await connect(requireToken());
+  const page = await getWithFallback(c, `${profile.userId}/media`, MEDIA_FIELDS, c.host === "instagram" ? MEDIA_FIELDS_MIN : MEDIA_FIELDS, {
+    limit: "1",
+  });
+  const first = ((page.body.data ?? []) as Json[])[0];
+  const media = first ? toMedia(first) : null;
+  return {
+    host: c.host,
+    userId: profile.userId,
+    username: str(profile.me.username),
+    followers: int(profile.me.followers_count),
+    hasCaption: media ? media.caption !== null : null,
+    hasMediaProductType: media ? media.mediaProductType !== null : null,
+    latestPost: media?.timestamp ?? null,
+    insights: media ? await fetchInsights(c, media.id) : null,
+  };
 }
 
 // Mock mode: the cached snapshot keeps its own mode (a cached live import stays "live").

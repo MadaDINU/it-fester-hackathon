@@ -16,8 +16,9 @@ function stubFetch(route: Route) {
   return calls;
 }
 
-async function loadLive(userId = "") {
+async function loadLive(userId = "", host = "instagram") {
   vi.resetModules();
+  vi.stubEnv("IG_GRAPH_HOST", host);
   vi.stubEnv("IG_DATA_MODE", "live");
   vi.stubEnv("IG_MAIN_ACCESS_TOKEN", "test-token");
   vi.stubEnv("IG_MAIN_USER_ID", userId);
@@ -161,6 +162,56 @@ describe("fetchInstagramSnapshot live", () => {
     const err = await fetchInstagramSnapshot({ limit: 10 }).catch((e: Error) => e);
     expect(meCalls).toBe(2);
     expect(String(err)).not.toContain("test-token");
+  });
+});
+
+describe("graph host selection", () => {
+  const facebookRoute: Route = (url) => {
+    if (url.hostname !== "graph.facebook.com") return undefined;
+    const path = url.pathname.replace("/v27.0/", "");
+    if (path === "me/accounts") return { body: { data: [{ id: "page1" }, { id: "page2", instagram_business_account: { id: "777" } }] } };
+    if (path === "777") return { body: { username: "fbacct", name: "FB", biography: "bio", followers_count: 134000, media_count: 2 } };
+    if (path === "777/media") return { body: { data: [media(0), media(1)] } };
+    if (path.endsWith("/insights") && path.startsWith("m")) return { body: insightBody };
+    if (path.endsWith("/comments")) return { body: { data: [] } };
+    return { status: 400, body: { error: { message: "not available", code: 100 } } };
+  };
+
+  it("facebook: finds the IG account via /me/accounts and keeps caption and product type", async () => {
+    const calls = stubFetch(facebookRoute);
+    const { fetchInstagramSnapshot } = await loadLive("", "facebook");
+    const snap = await fetchInstagramSnapshot({ limit: 10 });
+    expect(snap.profile).toMatchObject({ id: "777", username: "fbacct", biography: "bio", followers: 134000 });
+    expect(snap.media[0]).toMatchObject({ caption: "post 0 #tag", mediaProductType: "REELS" });
+    expect(calls.every((u) => u.hostname === "graph.facebook.com")).toBe(true);
+  });
+
+  it("auto: uses graph.facebook.com when the token works there", async () => {
+    stubFetch(facebookRoute);
+    const { fetchInstagramSnapshot } = await loadLive("", "auto");
+    expect((await fetchInstagramSnapshot({ limit: 10 })).profile.id).toBe("777");
+  });
+
+  it("auto: falls back to graph.instagram.com on a token error", async () => {
+    const calls = stubFetch((url) =>
+      url.hostname === "graph.facebook.com"
+        ? { status: 400, body: { error: { message: "Invalid OAuth access token", type: "OAuthException", code: 190 } } }
+        : baseRoute()(url),
+    );
+    const { fetchInstagramSnapshot } = await loadLive("", "auto");
+    const snap = await fetchInstagramSnapshot({ limit: 10 });
+    expect(snap.profile.id).toBe("123");
+    expect(calls.some((u) => u.hostname === "graph.instagram.com")).toBe(true);
+  });
+
+  it("auto: does not hide non-token errors behind a fallback", async () => {
+    stubFetch((url) =>
+      url.hostname === "graph.facebook.com"
+        ? { status: 400, body: { error: { message: "No Instagram account is linked", code: 100 } } }
+        : baseRoute()(url),
+    );
+    const { fetchInstagramSnapshot } = await loadLive("", "auto");
+    await expect(fetchInstagramSnapshot({ limit: 10 })).rejects.toThrow();
   });
 });
 
