@@ -28,7 +28,7 @@ Pentru Madalin (deck). Cifrele sunt măsurate pe 7 nov 2026. Ce nu e confirmat e
 
 ## 5. Cost vs valoare (măsurat)
 - Brand nou (import + audiență): **~€0,026**. Campanie (4 variante + focus group): **~€0,04–0,05**.
-- Learning loop: **~€0,013**. Community: **~€0,001**.
+- **~€0,01 per post variant** (campaign cost ÷ variants). Learning loop: **~€0,013**. Community: **~€0,001**.
 - Tot hackathonul, cu toate testele pe AI real: **~€0,52**.
 - Valoare: ~2 h de muncă manuală per campanie, adică ~€40 la €20/h (ipoteză editabilă în aplicație).
 
