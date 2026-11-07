@@ -5,7 +5,7 @@
   min-height: 100dvh;
   background: #f7f8fa;
   color: #20232d;
-  font-family: var(--font-loopwise-inter), Inter, Arial, sans-serif;
+  font-family: var(--font-loopwise-inter, Inter), Arial, sans-serif;
 }
 .header { background: #fff; border-bottom: 1px solid #e6e7ed; }
 .headerInner { max-width: 1280px; margin: auto; padding: 20px 40px; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
