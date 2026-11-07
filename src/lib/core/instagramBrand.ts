@@ -45,6 +45,8 @@ export const PLACEHOLDER_DNA: TBrandDNA = {
 export function mediaFormat(m: Pick<TIgMedia, "mediaType" | "mediaProductType">): TVariant["format"] {
   if (m.mediaProductType === "REELS") return "reel";
   if (m.mediaType === "CAROUSEL_ALBUM") return "carousel";
+  // Feed videos are reels; without media_product_type the media type alone decides.
+  if (m.mediaType === "VIDEO" && m.mediaProductType === null) return "reel";
   return "post";
 }
 
