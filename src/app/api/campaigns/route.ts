@@ -2,9 +2,9 @@ import { z } from "zod";
 import { CreateCampaignRequest } from "@/lib/contracts";
 import { createCampaign } from "@/lib/core/campaign";
 import { listCampaigns } from "@/lib/db/campaigns";
-import { fail, failFromError, ok } from "@/lib/http";
+import { fail, failFromError, ok, parseBody } from "@/lib/http";
 
-export const maxDuration = 120;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
@@ -18,10 +18,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const campaign = await createCampaign(CreateCampaignRequest.parse(await request.json()));
+    const campaign = await createCampaign(await parseBody(request, CreateCampaignRequest));
     return campaign ? ok(campaign, 201) : fail("not_found", "Brand not found", 404);
   } catch (err) {
-    if (err instanceof SyntaxError) return fail("invalid_request", "Body must be JSON", 400);
     return failFromError(err);
   }
 }
