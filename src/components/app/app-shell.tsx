@@ -38,5 +38,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 export function NewBrandButton() {
-  return <Button render={<Link href="/brands/new" />} className="min-h-11 bg-[#7C3AED] px-4 text-white hover:bg-[#6D28D9]"><Plus aria-hidden="true" />Connect a brand</Button>;
+  return <Button nativeButton={false} render={<Link href="/brands/new" />} className="min-h-11 bg-[#7C3AED] px-4 text-white hover:bg-[#6D28D9]"><Plus aria-hidden="true" />Connect a brand</Button>;
 }

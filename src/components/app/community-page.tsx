@@ -218,7 +218,7 @@ export function CommunityPage() {
       />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Button variant="outline" className="min-h-11" render={<Link href={`/brands/${encodeURIComponent(id)}`} />}>
+        <Button variant="outline" className="min-h-11" nativeButton={false} render={<Link href={`/brands/${encodeURIComponent(id)}`} />}>
           Back to brand
         </Button>
         {(isMock || isFallbackMode) && (
@@ -686,7 +686,7 @@ export function CommunityPage() {
                       <Button
                         variant="outline"
                         className="min-h-11 w-full gap-2 border-violet-200 text-violet-900 hover:bg-violet-50"
-                        render={<Link href={loyaltyCampaignUrl(id, idea)} />}
+                        nativeButton={false} render={<Link href={loyaltyCampaignUrl(id, idea)} />}
                       >
                         Turn into campaign
                         <ArrowRight className="size-4" aria-hidden="true" />
