@@ -82,6 +82,20 @@ export async function insertInstagramBrand(fields: {
   return data.id;
 }
 
+export async function insertWebsiteBrand(fields: {
+  name: string;
+  websiteUrl: string | null;
+  dna: TBrandDNA;
+}): Promise<string> {
+  const { data, error } = await supabaseAdmin
+    .from("brands")
+    .insert({ name: fields.name, website_url: fields.websiteUrl, dna: fields.dna, audience: null })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data.id;
+}
+
 export async function updateBrandProfile(
   id: string,
   fields: { name?: string; followers?: number; dna?: TBrandDNA; audience?: TAudienceProfile },

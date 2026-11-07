@@ -27,7 +27,7 @@ import { fit } from "@/lib/ml/predictor";
 // No per-account timezone is available; the target market and demo account are in Romania.
 const LOCAL_TIMEZONE = "Europe/Bucharest";
 
-const PLACEHOLDER_DNA: TBrandDNA = {
+export const PLACEHOLDER_DNA: TBrandDNA = {
   summary: "Import in progress",
   niche: "",
   industry: "",
