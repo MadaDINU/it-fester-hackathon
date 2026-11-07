@@ -35,7 +35,9 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 - „Pe un cont real, aceeași buclă rulează pe postările reale de îndată ce apar.”
 
 **Tehnic (2:50–3:20)**
-- „Next.js, Supabase cu RLS, Anthropic, Instagram Graph API.” (Discord și Adobe Express le spunem doar dacă sunt gata și le arătăm în demo.)
+- „Next.js, Supabase cu RLS, Anthropic, Instagram Graph API.”
+- „Discord: când o campanie e gata, echipa primește o notificare cu câștigătoarea și linkul spre Studio, ca un om să o aprobe înainte de publicare. Integrare reală, testată azi.”
+- „Adobe Express: creativul se deschide în editorul Adobe și se salvează înapoi în aplicație.” (Spunem asta doar după testul manual pe producție; vezi runbook-ul.)
 - „Fiecare răspuns AI e validat cu Zod. Cifrele (rate de engagement, ore bune) le calculează codul, nu modelul.”
 - „Predictorul e o regresie ridge scrisă de noi, antrenată pe istoricul contului.”
 - „Am măsurat și am optimizat: ruta de campanie a scăzut de la 57 s la 39–44 s. Am mutat Criticul pe Haiku și am trimis Creatorului doar un rezumat al audienței.”
@@ -60,7 +62,8 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 |---|---|---|
 | 1 | **Brand** (Actul 1, real) | „Un cont mare, dar adormit: 134.585 de urmăritori, 0 postări.” Arătăm demografia reală și cele 4 persona; fiecare citează procentele reale în `groundedIn`. Secțiunile de performanță arată „Available after your first posts”. |
 | 2 | **Campanie nouă** (Actul 1, real): goal *followers*, formats *reel + post*, brief „Relaunch: first 3 posts to re-engage 134k dormant followers” | Vezi narațiunea de mai jos. Pe laptop durează ~50 s; dacă trece de 60 s, deschidem campania pregătită. |
-| 3 | **Creative + publicare** (mock) | „Nu publicăm nimic pe contul real în demo; pentru contul principal e nevoie de confirmare explicită.” Arătăm notificarea pe Discord, dacă e configurat. |
+| 3 | **Creative + publicare** (mock) | „Nu publicăm nimic pe contul real în demo; pentru contul principal e nevoie de confirmare explicită.” Arătăm notificarea din Discord, primită când campania a fost gata: „un om aprobă, AI-ul nu postează singur”. |
+| 3b | **Adobe Express** (tab-ul de **producție**, https://loopwise-ruddy.vercel.app) | Doar dacă testul manual a mers: „Edit in Adobe Express” → editare → Save, apoi preview-ul se actualizează. Local (http) editorul e blocat de Adobe, deci folosim tab-ul de producție. |
 | 4 | **Community** (Actul 1, real) | „Fără comentarii încă: ideile de loialitate vin din audiență.” Click „Turn into campaign” pe o idee. |
 | 5 | **Analytics** (Actul 2, simulat) | „După prima lună, simulat și declarat.” Arătăm badge-ul „Simulated history”, R² 0,89 și learnings-urile cu cifre. „Run learning loop” doar dacă avem timp. |
 | 6 | Încheiere | Fraza finală din secțiunea 1. |
@@ -96,6 +99,7 @@ Orice schimbare de variabilă se face în `.env.local`, apoi Ctrl+C pe `demo:sta
 | 3 Campanie | Generarea trece de ~60 s sau dă „Request timed out” / 502 | „Creatorul scrie 4 variante cu script complet de reel; ca să nu vă ținem, vă arăt una generată azi pe același cont.” | Deschidem linkul campaniei pregătite. Verificăm înainte că `AI_TIMEOUT_MS=110000` e în `.env.local`. Dacă Anthropic e căzut: `AI_PROVIDER=mock`, repornim; spunem că restul demo-ului folosește date generate mai devreme. |
 | 3 Campanie | Eroare 402 „budget_exceeded” | „Avem un plafon de cost pe AI: aplicația se oprește singură înainte să depășească bugetul. Asta e partea de cost control.” | Deschidem campania pregătită. Nu mărim `AI_BUDGET_EUR` pe scenă. |
 | 4 Publicare | Publish sau Simulate sunt blocate în UI („require M6b/M7”) | „Publicarea e intenționat pe mock: nu postăm nimic pe contul real de 134k în demo. Pentru contul principal e nevoie de confirmare explicită.” | Sărim peste click; arătăm dialogul de confirmare pentru contul principal, dacă e activ, și trecem la Community. |
+| 3b Adobe | Editorul nu se deschide sau arată „refused to connect” | „Editorul Adobe rulează doar pe https; vă arătăm restul pe producție.” | Trecem pe tab-ul de producție; dacă nici acolo nu merge, sărim pasul. |
 | 5 Community | „Run Community agent” dă eroare | „Contul nu are încă comentarii; ideile de loialitate sunt deja generate din audiență.” | Arătăm cele 3 idei de loialitate deja salvate (în engleză). |
 | Oricare | Fără internet (Supabase și Anthropic au nevoie de rețea) | „Vă arătăm înregistrarea.” | Pornim video-ul de rezervă. |
 
@@ -150,4 +154,6 @@ Toate rămân TBD până le măsurăm pe contul real. Nu le spunem pe scenă pâ
 | Istoricul de 30 de postări și metricile lor (Actul 2) | **Simulat** | `seed-history.ts`, etichetat „Simulated history” |
 | R² 0,89 și learnings-urile (Actul 2) | **Din date simulate** | demonstrează bucla, nu performanța contului |
 | Publish și Simulate | **Mock** | nu se publică nimic pe Instagram |
+| Notificarea Discord | **Real** | webhook Discord, livrare confirmată pe 7 nov 2026 |
+| Editarea în Adobe Express | **Real** (în așteptarea testului manual) | Adobe Express Embed SDK, doar pe https (producție) |
 | Comentarii | **Nu există** | contul nu are postări |
