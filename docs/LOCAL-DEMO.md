@@ -14,9 +14,11 @@ Rulăm build-ul de producție local: e mai rapid și mai stabil decât `npm run 
 | `ANTHROPIC_MODEL` / `ANTHROPIC_MODEL_FAST` | `claude-sonnet-5-5` / `claude-haiku-5-5` (implicite) |
 | `AI_BUDGET_EUR` | `4`; peste prag, apelurile reale primesc 402 |
 | `IG_DATA_MODE` | `live` cu token sau `mock` pentru snapshotul salvat |
-| `IG_MAIN_ACCESS_TOKEN`, `IG_MAIN_USER_ID` | tokenul contului; ID-ul poate lipsi și se descoperă automat |
-| `IG_GRAPH_HOST` | `auto` (încearcă graph.facebook.com, apoi graph.instagram.com) |
+| `IG_MAIN_ACCESS_TOKEN`, `IG_MAIN_USER_ID` | tokenul contului și ID-ul contului Instagram (obligatoriu pentru tokenul de system user) |
+| `IG_GRAPH_HOST` | `facebook` (graph.facebook.com) |
 | `PUBLISH_MODE` | `mock`, ca să nu se publice nimic din greșeală |
+| `NEXT_PUBLIC_USE_MOCKS` | `false`. Se aplică la **build**: după orice schimbare rulează din nou `npm run demo:build` |
+| `CONTENT_LANGUAGE` | `en` (implicit): tot conținutul generat e în engleză |
 
 `npm run demo:check` verifică aceste variabile fără să le afișeze valorile.
 

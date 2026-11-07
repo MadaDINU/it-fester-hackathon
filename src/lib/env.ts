@@ -30,6 +30,7 @@ const EnvSchema = z.object({
   AI_BUDGET_EUR: num(4),
   // Per generateJSON call, retries included. 50 s fits Vercel's 60 s routes; raise it locally.
   AI_TIMEOUT_MS: num(50_000),
+  CONTENT_LANGUAGE: z.preprocess((v) => (v === "" ? undefined : v), z.string().default("en")),
   VALUE_HOURLY_RATE_EUR: num(20),
   VALUE_MINUTES_SAVED_PER_CAMPAIGN: num(120),
 

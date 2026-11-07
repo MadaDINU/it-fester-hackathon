@@ -26,3 +26,11 @@ describe("budget guard", () => {
     expect(failFromError(new AIError("bad output")).status).toBe(502);
   });
 });
+
+describe("content language", () => {
+  it("names the configured language in the system prompt", async () => {
+    const { contentLanguageRule } = await import("@/lib/ai/client");
+    expect(contentLanguageRule("en")).toContain("Content language: English");
+    expect(contentLanguageRule("ro")).toContain("Romanian");
+  });
+});
