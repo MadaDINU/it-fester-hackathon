@@ -7,8 +7,9 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 
 **Problemă (0:00–0:40)**
 - „Instagramul e vitrina oricărei afaceri mici. Reels-urile iau cea mai mare parte din reach.”
-- „Un cont real, 134.000 de urmăritori. Inactiv. Pierde aproximativ 900 de urmăritori pe lună.”
-- „Nu e un caz rar. Așa arată orice afacere mică fără echipă de marketing.”
+- „Un cont real: @ironcladwind, 134.585 de urmăritori. Profilul are 0 postări. În ultimele 30 de zile a pierdut net 921 de urmăritori.” (Surse: Instagram API, 7 nov 2026; Instagram Professional Dashboard, 7 nov 2026.)
+- „Audiența e acolo, dar contul tace. Nu e un caz rar: așa arată orice afacere mică fără echipă de marketing.”
+- „Întrebarea noastră: cum relansezi un cont când nu ai istoric pe care să-l analizezi?”
 - „Unelte AI există. Dar doar generează. Nu își cunosc publicul, nu prezic ce merge și nu învață din rezultate. Generezi și speri.”
 
 **Soluție (0:40–1:20)**
@@ -20,8 +21,11 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 - „Community citește comentariile și propune răspunsuri și idei de loialitate.”
 - „Fiecare postare face următoarea mai bună.”
 
-**Demo (1:20–2:50)**
-- Vezi runbook-ul din secțiunea 2.
+**Demo (1:20–2:50): cold start și relansare**
+- „Importăm contul real. Nu are nicio postare, dar are 134k de oameni. Din demografia lor reală (bărbați 25–34: 26%, 35–44: 18%; SUA 37%, India 12%) agentul Audience construiește 4 persona și cele 5 piloni de conținut.”
+- „Modelul ML e în cold start: pornește de la ponderi prestabilite și învață din primele postări. Nu inventăm un R².”
+- „Generăm campania de relansare: primele 3 postări care să trezească audiența.”
+- Detaliile pe click în runbook-ul din secțiunea 2.
 
 **Tehnic (2:50–3:20)**
 - „Next.js, Supabase cu RLS, Anthropic, Instagram Graph API.” (Discord și Adobe Express le spunem doar dacă sunt gata și le arătăm în demo.)
@@ -48,8 +52,8 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 | # | Click | Ce spunem |
 |---|---|---|
 | 1 | **Brand** | „Importul arată un cont mare, dar adormit.” Arătăm cine sunt urmăritorii, reels față de postări, orele bune. „Cele 4 persona vin din date reale; fiecare are `groundedIn`.” |
-| 2 | **Analytics** | Istoricul real. Modelul antrenat pe cont, cu R² spus cinstit (vezi checklistul). Click pe „Run learning loop”. „Learnings-urile citează cifre din cont.” |
-| 3 | **Campanie nouă**: goal *followers*, formats *reel + post*, brief „Comeback after inactivity: win back lapsed followers” | Vezi narațiunea de mai jos. |
+| 2 | **Analytics** | „Cold start: modelul pornește de la ponderi prestabilite și învață din primele postări.” Dacă am rulat `seed-history.ts`: „Pentru demo am adăugat 30 de postări **simulate**, etichetate «seeded», ca să vedeți bucla de învățare.” Click pe „Run learning loop”. |
+| 3 | **Campanie nouă**: goal *followers*, formats *reel + post*, brief „Relaunch: first 3 posts to re-engage 134k dormant followers” | Vezi narațiunea de mai jos. Pe laptop durează ~50 s. |
 | 4 | **Creative + publicare** (mock, pe contul de test) | „Nu publicăm niciodată pe contul principal din greșeală.” Arătăm mesajul de notificare. |
 | 5 | **Community** | Comentarii reale clasificate, răspunsuri fără promisiuni inventate, o idee de loialitate. Click „Turn into campaign”. |
 | 6 | Încheiere | Fraza finală din secțiunea 1. |
@@ -94,11 +98,13 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 
 Toate rămân TBD până le măsurăm pe contul real. Nu le spunem pe scenă până nu sunt completate.
 
-- [ ] Număr de postări importate: TBD
-- [ ] Postări cu insights: TBD
-- [ ] R² real: TBD
-- [ ] Număr de exemple de antrenare: TBD
-- [ ] `formatPerformance` (reels față de postări): TBD
-- [ ] Cost pe campanie pe contul real: TBD (pe date mock: €0,036–0,040)
-- [ ] Latența importului: TBD (pe date mock: 25 s)
-- [ ] Cheltuială AI totală: TBD
+- [x] Urmăritori: **134.585** (Instagram API, 7 nov 2026)
+- [x] Postări importate: **0** (profil gol), deci fără insights pe postări și fără comentarii
+- [x] Pierdere netă: **−921 urmăritori în 30 de zile** (Instagram Professional Dashboard, 7 nov 2026)
+- [x] Demografie reală: da. Top: M 25–34 **26,0%**, M 35–44 **18,2%**, M 45–54 **8,1%**; țări: SUA **36,7%**, India **11,6%**, Marea Britanie **4,6%**
+- [x] R² real: **nu există** (cold start, 0 eșantioane; model cu ponderi prestabilite). Nu spunem o cifră.
+- [x] `formatPerformance`: gol (fără postări)
+- [x] Cost import + audiență pe contul real: **€0,026**, 20,5 s
+- [x] Cost campanie pe contul real: **€0,050** (Creator 41 s + focus group 10 s, ruta 52 s pe laptop)
+- [ ] Cheltuială AI totală: TBD la final (la 7 nov, ~€0,41 înregistrat + estimat)
+- [ ] Dacă rulăm `seed-history.ts`: R² și learnings pe date **simulate**; le prezentăm doar ca demonstrație a buclei
