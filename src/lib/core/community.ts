@@ -1,5 +1,6 @@
 import { generateJSON } from "@/lib/ai/client";
 import { COMMUNITY_SYSTEM, CommunityOutput } from "@/lib/ai/prompts";
+import { unsupportedPromise } from "@/lib/ai/reply-guard";
 import { Community, type TCommentInsight, type TCommunity } from "@/lib/contracts";
 import { getBrandWithContext } from "@/lib/db/brands";
 import {
@@ -66,11 +67,18 @@ export async function runCommunityAgent(brandId: string): Promise<TCommunity | n
       : result.comments;
   const sent = new Set(pending.map((c) => c.id));
   const seen = new Set<string>();
-  const items = returned.filter((c) => {
-    if (!sent.has(c.id) || seen.has(c.id)) return false;
-    seen.add(c.id);
-    return true;
-  });
+  const items = returned
+    .filter((c) => {
+      if (!sent.has(c.id) || seen.has(c.id)) return false;
+      seen.add(c.id);
+      return true;
+    })
+    .map((c) => {
+      // A reply that promises something the brand never offered is dropped, not sent.
+      const problem = c.suggestedReply ? unsupportedPromise(c.suggestedReply, brand.dna) : null;
+      if (problem) console.warn(`community reply dropped: ${problem}`);
+      return problem ? { ...c, suggestedReply: null } : c;
+    });
 
   await saveCommentAnalysis(brandId, items);
   await insertLoyaltyIdeas(brandId, result.loyaltyIdeas);
