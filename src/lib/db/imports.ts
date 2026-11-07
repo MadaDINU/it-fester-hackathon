@@ -166,6 +166,89 @@ export async function listMeasuredPosts(brandId: string): Promise<MeasuredPost[]
   });
 }
 
+export type DashboardPost = {
+  variantId: string;
+  caption: string;
+  format: TVariant["format"];
+  imageUrl: string | null;
+  permalink: string | null;
+  predictedEngagementRate: number | null;
+  publishedAt: string;
+  reach: number;
+  engagementRate: number;
+  source: MeasuredPost["source"];
+};
+
+type DashboardJoin = {
+  publication_id: string;
+  reach: number;
+  engagement_rate: number;
+  source: MeasuredPost["source"];
+  publications: {
+    permalink: string | null;
+    published_at: string;
+    variants: {
+      id: string;
+      caption: string;
+      format: TVariant["format"];
+      image_url: string | null;
+      predicted_engagement_rate: number | null;
+    };
+  };
+};
+
+const PAGE = 1000;
+
+// Posts with a measured reach (reach = 0 means insights are missing), latest metrics per publication.
+export async function listDashboardPosts(brandId: string): Promise<DashboardPost[]> {
+  const latest = new Map<string, DashboardJoin>();
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabaseAdmin
+      .from("metrics")
+      .select(
+        "publication_id, reach, engagement_rate, source, publications!inner(permalink, published_at, variants!inner(id, caption, format, image_url, predicted_engagement_rate, campaigns!inner(brand_id)))",
+      )
+      .eq("publications.variants.campaigns.brand_id", brandId)
+      .order("captured_at")
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(error.message);
+    for (const row of data as unknown as DashboardJoin[]) latest.set(row.publication_id, row);
+    if (data.length < PAGE) break;
+  }
+
+  // The latest metrics decide whether a post counts: insights missing there means reach 0.
+  return [...latest.values()]
+    .filter((row) => Number(row.reach) > 0)
+    .map((row) => {
+      const v = row.publications.variants;
+      return {
+        variantId: v.id,
+        caption: v.caption,
+        format: v.format,
+        imageUrl: v.image_url,
+        permalink: row.publications.permalink,
+        predictedEngagementRate: v.predicted_engagement_rate === null ? null : Number(v.predicted_engagement_rate),
+        publishedAt: row.publications.published_at,
+        reach: Number(row.reach),
+        engagementRate: Number(row.engagement_rate),
+        source: row.source,
+      };
+    });
+}
+
+// Generated campaigns that finished: these are the ones that saved the customer work.
+export async function countFinishedCampaigns(brandId: string): Promise<number> {
+  const { count, error } = await supabaseAdmin
+    .from("campaigns")
+    .select("id", { head: true, count: "exact" })
+    .eq("brand_id", brandId)
+    .eq("kind", "generated")
+    .in("status", ["ready", "published"]);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 export async function countImportedPosts(brandId: string): Promise<number> {
   const { data, error } = await supabaseAdmin
     .from("campaigns")

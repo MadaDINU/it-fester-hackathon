@@ -5,6 +5,29 @@ export type UsageTag = { operation: string; brandId?: string; campaignId?: strin
 
 export type ModelTier = "main" | "fast";
 
+// Total AI cost of a brand (imports and learning included) and the part tied to campaigns.
+export async function getBrandAiCost(brandId: string): Promise<{ totalEur: number; campaignEur: number }> {
+  let totalEur = 0;
+  let campaignEur = 0;
+  const page = 1000;
+  for (let from = 0; ; from += page) {
+    const { data, error } = await supabaseAdmin
+      .from("ai_usage")
+      .select("cost_eur, campaign_id")
+      .eq("brand_id", brandId)
+      .order("id")
+      .range(from, from + page - 1);
+    if (error) throw new Error(error.message);
+    for (const row of data) {
+      const cost = Number(row.cost_eur);
+      totalEur += cost;
+      if (row.campaign_id) campaignEur += cost;
+    }
+    if (data.length < page) break;
+  }
+  return { totalEur, campaignEur };
+}
+
 export function computeCostEur(inputTokens: number, outputTokens: number, tier: ModelTier = "main"): number {
   const [priceIn, priceOut] =
     tier === "fast"
