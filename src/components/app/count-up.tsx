@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatCount } from "./format";
 
 // Counts from 0 to `value` once on mount (700ms, ease-out); jumps straight to it under reduced motion.
-export function CountUp({ value, format = n => Math.round(n).toLocaleString("en-US"), duration = 700 }: { value: number; format?: (n: number) => string; duration?: number }) {
+export function CountUp({ value, format = n => formatCount(n), duration = 700 }: { value: number; format?: (n: number) => string; duration?: number }) {
   const [n, setN] = useState(0);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setN(value); return; }

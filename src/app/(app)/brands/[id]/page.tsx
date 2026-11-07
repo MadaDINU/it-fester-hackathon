@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPercent, formatR2 } from "@/components/app/format";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from "react";
@@ -72,7 +73,7 @@ export default function BrandOverviewPage() {
       const result = await api.learn(id);
       setBrand(current => current ? { ...current, learnings: result.learnings } : current);
       setDashboard(current => current ? { ...current, model: result.model } : current);
-      toast.success(`Learning loop complete · ${isColdStartModel(result.model) || result.model.r2 === null ? COLD_START_LABEL : `R² ${result.model.r2.toFixed(2)}`}${process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? " · demo model" : ""}`);
+      toast.success(`Learning loop complete · ${isColdStartModel(result.model) || result.model.r2 === null ? COLD_START_LABEL : `R² ${formatR2(result.model.r2)}`}${process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? " · demo model" : ""}`);
     }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to run learning loop"); }
     finally { setBusy(null); }
@@ -111,8 +112,8 @@ export default function BrandOverviewPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
           <Kpi label="Followers">{brand.instagram ? <CountUp value={brand.instagram.followers} /> : <span className="text-base font-medium text-[#5B6170]">Not connected</span>}</Kpi>
           <Kpi label="Imported posts"><CountUp value={brand.importedPosts} /></Kpi>
-          <Kpi label="Avg. engagement rate" tip={<InfoTip id="er" />}>{dashboard && dashboard.totals.posts > 0 ? <CountUp value={dashboard.totals.avgEngagementRate * 100} format={n => `${n.toFixed(1)}%`} /> : <span className="text-base font-medium text-[#5B6170]">No results yet</span>}</Kpi>
-          <Kpi label="Model" tip={<InfoTip id={isColdStartModel(model) ? "coldStart" : "r2"} />}>{!model || isColdStartModel(model) ? <><LoopRing value={0} pulse size={44} stroke={5} label="Cold start model, no fit yet" /><span className="text-xl">Cold start</span></> : <><LoopRing value={Math.max(0, model.r2 ?? 0)} size={44} stroke={5} label={`Model fit R² ${model.r2?.toFixed(2)}`} /><span>R² <CountUp value={model.r2 ?? 0} format={n => n.toFixed(2)} /></span></>}</Kpi>
+          <Kpi label="Avg. engagement rate" tip={<InfoTip id="er" />}>{dashboard && dashboard.totals.posts > 0 ? <CountUp value={dashboard.totals.avgEngagementRate * 100} format={n => formatPercent(n, "en-US", { alreadyPercent: true })} /> : <span className="text-base font-medium text-[#5B6170]">No results yet</span>}</Kpi>
+          <Kpi label="Model" tip={<InfoTip id={isColdStartModel(model) ? "coldStart" : "r2"} />}>{!model || isColdStartModel(model) ? <><LoopRing value={0} pulse size={44} stroke={5} label="Cold start model, no fit yet" /><span className="text-xl">Cold start</span></> : <><LoopRing value={Math.max(0, model.r2 ?? 0)} size={44} stroke={5} label={`Model fit R² ${formatR2(model.r2)}`} /><span>R² <CountUp value={model.r2 ?? 0} format={n => formatR2(n)} /></span></>}</Kpi>
         </div>
       </section>
 
@@ -137,7 +138,7 @@ export default function BrandOverviewPage() {
           {step?.key !== "learn" && learnButton(false)}
         </SectionCard>
         <SectionCard title="Community" action={<Link href={`${base}/community`} className={panelLink}>Open<ChevronRight className="size-4" aria-hidden="true" /></Link>}>
-          {stats ? <><dl className="grid grid-cols-3 gap-3 text-center">{([["Positive", stats.positiveShare], ["Negative", stats.negativeShare], ["Questions", stats.questionShare]] as const).map(([label, share]) => <div key={label} className="rounded-lg bg-[#F7F8FA] p-3"><dt className="text-xs text-[#5B6170]">{label}</dt><dd className="mt-1 text-xl font-semibold tabular-nums text-[#20232D]">{Math.round(share * 100)}%</dd></div>)}</dl><p className="text-sm text-[#5B6170]">{stats.total} comments · {stats.pending} waiting for a reply</p>{community?.summary?.topTopics.length ? <div className="flex flex-wrap gap-2">{community.summary.topTopics.slice(0, 4).map(t => <span key={t} className="rounded-full bg-[#F3EEFF] px-3 py-1 text-xs font-medium text-[#6D28D9]">{t}</span>)}</div> : null}</>
+          {stats ? <><dl className="grid grid-cols-3 gap-3 text-center">{([["Positive", stats.positiveShare], ["Negative", stats.negativeShare], ["Questions", stats.questionShare]] as const).map(([label, share]) => <div key={label} className="rounded-lg bg-[#F7F8FA] p-3"><dt className="text-xs text-[#5B6170]">{label}</dt><dd className="mt-1 text-xl font-semibold tabular-nums text-[#20232D]">{formatPercent(share)}</dd></div>)}</dl><p className="text-sm text-[#5B6170]">{stats.total} comments · {stats.pending} waiting for a reply</p>{community?.summary?.topTopics.length ? <div className="flex flex-wrap gap-2">{community.summary.topTopics.slice(0, 4).map(t => <span key={t} className="rounded-full bg-[#F3EEFF] px-3 py-1 text-xs font-medium text-[#6D28D9]">{t}</span>)}</div> : null}</>
             : community?.loyaltyIdeas.length ? <><p className="text-sm text-[#5B6170]">No comments yet. Loyalty ideas to start the conversation:</p><ul className="space-y-3">{community.loyaltyIdeas.slice(0, 2).map(idea => <li key={idea.title} className="rounded-lg border border-[#E6E7ED] p-3"><p className="text-sm font-medium text-[#20232D]">{idea.title}</p><p className="mt-1 text-xs text-[#5B6170]">{formatMechanic(idea.mechanic)}</p></li>)}</ul></>
             : <p className="text-sm text-[#5B6170]">No comments or loyalty ideas yet. Open Community to run the Community agent.</p>}
         </SectionCard>
