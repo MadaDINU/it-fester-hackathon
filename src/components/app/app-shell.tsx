@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, FlaskConical, Layers3, Plus, RefreshCw } from "lucide-react";
+import { ArrowUpRight, FlaskConical, Layers3, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import styles from "./app-shell.module.css";
 
@@ -15,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/brands" className={styles.logo} aria-label="Loopwise workspace">
-            <span className={styles.logoMark}><RefreshCw size={21} aria-hidden="true" /></span>
+            <Image src="/brand/loopwise-logo-64.png" width={28} height={28} alt="" priority />
             Loopwise<span className={styles.wordmarkDot}>.</span>
           </Link>
           <nav aria-label="Main navigation" className={styles.nav}>
