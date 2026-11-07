@@ -1,5 +1,6 @@
 "use client";
 
+import { CountUp } from "./count-up";
 import { useState } from "react";
 import type { TCampaign, TCostValue } from "@/lib/contracts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,7 @@ export function CampaignRoi({ campaign, costValue }: { campaign: TCampaign; cost
   let result: ReturnType<typeof calculateRoi>;
   try { result = calculateRoi({ campaigns: 1, minutesSavedPerCampaign: costValue.assumptions.minutesSavedPerCampaign, hourlyRate: costValue.assumptions.hourlyRateEur, aiCostPerCampaign: campaign.aiCost.costEur, planPrice: 0 }); }
   catch { return <p role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">ROI is unavailable because the cost assumptions are invalid.</p>; }
-  return <div className="mb-6 rounded-xl border border-[#E6E7ED] bg-white px-4 py-3"><p className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm text-[#5B6170]"><span>AI cost <strong className="text-[#20232D]">{eur(result.aiCost)}</strong>{campaign.aiCost.estimated ? " (est.)" : ""}</span><span>Time saved <strong className="text-[#20232D]">~{result.hoursSaved.toFixed(1)} h</strong></span><span>Value <strong className="text-[#20232D]">≈ {eur(result.value)}</strong></span><span>ROI <strong className="text-[#6D28D9]">{result.roiMultiple === null ? "unavailable" : `×${result.roiMultiple.toFixed(0)}`}</strong></span><span className="text-xs">Estimate: {costValue.assumptions.minutesSavedPerCampaign} min saved at {eur(costValue.assumptions.hourlyRateEur)}/h vs AI cost, not revenue</span></p></div>;
+  return <div className="mb-6 rounded-xl border border-[#E6E7ED] bg-white px-4 py-3"><p className="flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm text-[#5B6170]"><span>AI cost <strong className="text-[#20232D]">{eur(result.aiCost)}</strong>{campaign.aiCost.estimated ? " (est.)" : ""}</span><span>Time saved <strong className="text-[#20232D]">~{result.hoursSaved.toFixed(1)} h</strong></span><span>Value <strong className="text-[#20232D]">≈ {eur(result.value)}</strong></span><span>ROI <strong className="text-[#6D28D9]">{result.roiMultiple === null ? "unavailable" : <CountUp value={result.roiMultiple} format={n => `×${n.toFixed(0)}`} />}</strong></span><span className="text-xs">Estimate: {costValue.assumptions.minutesSavedPerCampaign} min saved at {eur(costValue.assumptions.hourlyRateEur)}/h vs AI cost, not revenue</span></p></div>;
 }
 export function CostValueCard({ value }: { value: TCostValue }) {
   if (value.campaigns === 0) return <Card className="border shadow-none ring-0"><CardHeader className="p-6 pb-2"><CardTitle>Cost vs Value</CardTitle></CardHeader><CardContent className="p-6 text-sm text-slate-600">Generate a campaign to measure AI cost.</CardContent></Card>;
