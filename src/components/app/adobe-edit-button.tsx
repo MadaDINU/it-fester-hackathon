@@ -27,6 +27,5 @@ export function AdobeEditButton({ variant, imageSrc, disabled, onSaved }: { vari
     finally { setWorking(false); }
   }
   const button = <Button variant="outline" className="min-h-11" disabled={disabled || working} onClick={() => void edit()}>{working ? "Opening Adobe…" : reel ? "Open Adobe Express" : "Edit in Adobe Express"}</Button>;
-  if (!reel || !variant.reelScript?.editingNotes.length) return button;
-  return <div className="w-full space-y-2 rounded-lg border p-3">{button}<p className="text-xs font-semibold text-slate-600">Editing notes (cover is edited here; cut the video in Adobe Express)</p><ul className="list-inside list-disc text-xs text-slate-600">{variant.reelScript.editingNotes.map((note, i) => <li key={i}>{note}</li>)}</ul></div>;
+  return button;
 }

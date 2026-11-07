@@ -221,22 +221,6 @@ export function CommunityPage() {
       />
 
       <BrandNav brandId={id} />
-      {(isMock || isFallbackMode) && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
-          <ShieldCheck className="size-3.5" aria-hidden="true" />
-          Safe Demo Mode (no live Meta calls)
-        </span>
-      )}
-
-      {isMock && !isFallbackMode && (
-        <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950">
-          <p className="font-medium">Demo Mode Active</p>
-          <p className="mt-1 text-xs text-violet-800">
-            Instagram comments and AI responses are simulated with zero risk. Human review is enforced before any action.
-          </p>
-        </div>
-      )}
-
       {isFallbackMode && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
           <p className="font-medium">Backend Endpoint Standby</p>
