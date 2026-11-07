@@ -4,7 +4,6 @@ import { agentFixtures } from "@/lib/ai/agent-fixtures";
 import { getTotalAiSpend, recordUsage, type ModelTier, type UsageTag } from "@/lib/db/usage";
 import { env } from "@/lib/env";
 
-const TIMEOUT_MS = 50_000;
 const MAX_ATTEMPTS = 2;
 const MOCK_DELAY_MS = 800;
 const JSON_ONLY = "\n\nRespond with a single valid JSON object and nothing else.";
@@ -83,7 +82,7 @@ async function generateAnthropic<T>(opts: GenerateOptions<T>): Promise<T> {
   if (!env.ANTHROPIC_API_KEY) throw new AIError("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 0 });
   // All attempts share one budget so a retry cannot outlive the route's maxDuration.
-  const deadline = Date.now() + TIMEOUT_MS;
+  const deadline = Date.now() + env.AI_TIMEOUT_MS;
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: opts.prompt }];
   let lastError = "";
 

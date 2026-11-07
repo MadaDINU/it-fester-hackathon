@@ -19,6 +19,7 @@ Rules:
 - Every persona's groundedIn must cite the real data supporting it (a demographic bucket, a comment theme, a top post).
 - Never invent statistics. Use only what the data shows.
 - Tag every post listed in the data with exactly one of your contentPillars in pillarTags, using its mediaId.
+- Cold start (coldStart is true): the account has an audience but no posts. Build the DNA from nicheBrief and the profile. Ground personas in the real demographics: groundedIn cites the actual buckets and percentages given, and segmentShare follows them. Return pillarTags as []. Do not invent engagement figures, post performance or comment themes; audienceVoice lists only what nicheBrief states, otherwise empty arrays.
 - Write content in the account's language; keep JSON keys in English.
 - colors are 2-5 hex codes like #7C3AED. preferredFormat is one of post, carousel, reel, story.
 Output JSON shape: {"dna":{summary,niche,industry,valueProposition,toneOfVoice[],doList[],dontList[],contentPillars[2-6],products[],targetAudience,colors[],keywords[]},"pillarTags":[{mediaId,pillar}],"audienceVoice":{topics[],praise[],complaints[],questions[]},"personas":[{name,ageRange,gender,location,description,motivations[],painPoints[],contentTheyLove[],preferredFormat,segmentShare,groundedIn}]}`;

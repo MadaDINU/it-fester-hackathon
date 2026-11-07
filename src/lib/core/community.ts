@@ -47,7 +47,31 @@ export async function runCommunityAgent(brandId: string): Promise<TCommunity | n
   if (!brand) return null;
 
   const pending = await listUnprocessedComments(brandId, MAX_UNPROCESSED);
-  if (pending.length === 0) return getCommunity(brandId);
+  if (pending.length === 0) {
+    // Cold start: no comments yet. The response keeps comments [] and summary null, and gets
+    // loyalty ideas from the DNA and audience in one cheap call, made only once.
+    const current = await getCommunity(brandId);
+    if (!current || current.comments.length > 0 || current.loyaltyIdeas.length > 0) return current;
+    const ideas = await generateJSON({
+      system: COMMUNITY_SYSTEM,
+      prompt: JSON.stringify({
+        note: "The account has no comments yet. Return comments as [] and base the 3 loyaltyIdeas on the brand DNA and audience; their why must cite the DNA or audience data, not comments.",
+        dna: brand.dna,
+        audience: brand.audience && {
+          demographics: brand.audience.demographics,
+          audienceVoice: brand.audience.audienceVoice,
+        },
+        comments: [],
+      }),
+      schema: CommunityOutput,
+      tier: "fast",
+      maxTokens: 2000,
+      fixture: "communityAnalysis",
+      usage: { operation: "communityAnalysis", brandId },
+    });
+    await insertLoyaltyIdeas(brandId, ideas.loyaltyIdeas);
+    return getCommunity(brandId);
+  }
 
   const result = await generateJSON({
     system: COMMUNITY_SYSTEM,

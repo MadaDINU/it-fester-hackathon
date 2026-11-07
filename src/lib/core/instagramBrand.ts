@@ -18,7 +18,9 @@ import {
   updateBrandProfile,
 } from "@/lib/db/brands";
 import { upsertComments } from "@/lib/db/comments";
-import { upsertImportedPosts, type ImportedPost } from "@/lib/db/imports";
+import { listMeasuredPosts, upsertImportedPosts, type ImportedPost } from "@/lib/db/imports";
+import { trainedOnFor } from "@/lib/core/learn";
+import { env } from "@/lib/env";
 import { saveModel } from "@/lib/db/model";
 import { UpstreamError } from "@/lib/http";
 import { fetchInstagramSnapshot } from "@/lib/integrations/instagram";
@@ -132,12 +134,16 @@ function buildAudiencePrompt(snapshot: TIgSnapshot, measured: ImportedPost[], be
     engagementRate: Number(p.engagementRate.toFixed(4)),
     caption: (p.media.caption ?? "").slice(0, 300),
   });
+  const coldStart = snapshot.media.length === 0;
   return JSON.stringify({
+    coldStart,
+    nicheBrief: env.IG_NICHE_BRIEF ?? null,
     profile: {
       username: snapshot.profile.username,
       name: snapshot.profile.name,
       biography: snapshot.profile.biography,
       followers: snapshot.profile.followers,
+      mediaCount: snapshot.profile.mediaCount,
     },
     topPosts: top.map(describe),
     bottomPosts: bottom.map(describe),
@@ -208,24 +214,17 @@ export async function buildBrandFromInstagram(limit: number): Promise<TBrandWith
     };
     await updateBrandProfile(brandId, { name, followers: profile.followers, dna: output.dna, audience });
 
-    if (measured.length >= 8) {
-      await saveModel(
-        brandId,
-        fit(
-          measured.map((p) => ({
-            input: {
-              caption: p.media.caption ?? "",
-              hashtags: p.hashtags,
-              panelScore: null,
-              format: p.format,
-              postHour: p.postHour,
-            },
-            engagementRate: p.engagementRate,
-          })),
-          source,
-        ),
-      );
-    }
+    // Trains on every measured post stored for the brand (imported or seeded history), so a
+    // re-import of an empty account keeps what was learned. Under 8 samples fit() returns the
+    // prior weights with r2 null: that is the cold-start model.
+    const history = await listMeasuredPosts(brandId);
+    await saveModel(
+      brandId,
+      fit(
+        history.map((p) => ({ input: p.input, engagementRate: p.engagementRate })),
+        history.length ? trainedOnFor(history) : source,
+      ),
+    );
   } catch (err) {
     // A failed first import must not leave a brand with placeholder DNA behind.
     if (!existingId) await deleteBrand(brandId);
