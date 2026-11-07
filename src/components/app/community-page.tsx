@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/app/page-states";
+import { BrandNav } from "@/components/app/brand-nav";
 import {
   computeCommentStats,
   filterComments,
@@ -195,6 +196,7 @@ export function CommunityPage() {
   return (
     <div className="space-y-8">
       <PageHeader
+        breadcrumb
         title="Community & Loyalty"
         description="Listen to audience conversations, review and approve AI response suggestions, and turn community feedback into high-converting loyalty campaigns."
         action={
@@ -218,17 +220,13 @@ export function CommunityPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <Button variant="outline" className="min-h-11" nativeButton={false} render={<Link href={`/brands/${encodeURIComponent(id)}`} />}>
-          Back to brand
-        </Button>
-        {(isMock || isFallbackMode) && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
-            <ShieldCheck className="size-3.5" aria-hidden="true" />
-            Safe Demo Mode (no live Meta calls)
-          </span>
-        )}
-      </div>
+      <BrandNav brandId={id} />
+      {(isMock || isFallbackMode) && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-900">
+          <ShieldCheck className="size-3.5" aria-hidden="true" />
+          Safe Demo Mode (no live Meta calls)
+        </span>
+      )}
 
       {isMock && !isFallbackMode && (
         <div className="rounded-xl border border-violet-200 bg-violet-50/70 p-4 text-sm text-violet-950">

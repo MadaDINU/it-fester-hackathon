@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
 import type { TAudienceProfile, TBrandDNA, TPersona } from "@/lib/contracts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function SectionCard({ title, children }: { title: string; children: ReactNode }) {
-  return <Card className="border shadow-none ring-0"><CardHeader className="px-6 pt-6"><CardTitle className="text-lg">{title}</CardTitle></CardHeader><CardContent className="space-y-5 px-6 pb-6">{children}</CardContent></Card>;
+  return <section className="space-y-4 rounded-xl border border-[#E6E7ED] bg-white p-6"><h2 className="text-base font-semibold text-[#20232D]">{title}</h2>{children}</section>;
 }
 export function Chips({ items }: { items: string[] }) {
   return <div className="flex flex-wrap gap-2">{items.map((item, i) => <span key={`${item}-${i}`} className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-900">{item}</span>)}</div>;
