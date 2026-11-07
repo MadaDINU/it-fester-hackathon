@@ -4,7 +4,7 @@ import { createCampaign } from "@/lib/core/campaign";
 import { listCampaigns } from "@/lib/db/campaigns";
 import { fail, failFromError, ok } from "@/lib/http";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {

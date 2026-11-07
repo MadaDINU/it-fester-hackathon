@@ -2,7 +2,13 @@ import type { z } from "zod";
 import { MOCK_PERSONA_IDS } from "@/lib/ai/agent-fixtures";
 import { generateJSON } from "@/lib/ai/client";
 import { CREATOR_SYSTEM, CRITIC_SYSTEM, CreatorOutput, CriticOutput } from "@/lib/ai/prompts";
-import type { TCampaign, TCreateCampaignRequest, TPersona, TPersonaReaction } from "@/lib/contracts";
+import type {
+  TAudienceProfile,
+  TCampaign,
+  TCreateCampaignRequest,
+  TPersona,
+  TPersonaReaction,
+} from "@/lib/contracts";
 import { getBrandWithContext } from "@/lib/db/brands";
 import { getCampaign, insertCampaign, insertVariants, setCampaignStatus } from "@/lib/db/campaigns";
 import { listLearnings } from "@/lib/db/learnings";
@@ -54,6 +60,23 @@ export function rankScores(panelScores: number[], predictions: number[]): number
   return ranks;
 }
 
+function summarizeAudience(audience: TAudienceProfile | null) {
+  if (!audience) return null;
+  const top3 = <T extends { share: number }>(items: T[]) =>
+    [...items].sort((a, b) => b.share - a.share).slice(0, 3);
+  const { demographics: d } = audience;
+  return {
+    demographics: d && {
+      ageGender: top3(d.ageGender),
+      topCities: top3(d.topCities),
+      topCountries: top3(d.topCountries),
+    },
+    formatPerformance: audience.formatPerformance,
+    bestHours: audience.bestHours,
+    audienceVoice: audience.audienceVoice,
+  };
+}
+
 export async function createCampaign(req: TCreateCampaignRequest): Promise<TCampaign | null> {
   const brand = await getBrandWithContext(req.brandId);
   if (!brand) return null;
@@ -68,7 +91,7 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
       system: CREATOR_SYSTEM,
       prompt: JSON.stringify({
         dna: brand.dna,
-        audience: brand.audience,
+        audience: summarizeAudience(brand.audience),
         personas: brand.personas.map((p) => ({
           name: p.name,
           ageRange: p.ageRange,
@@ -114,6 +137,7 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
       }),
       schema: CriticOutput,
       maxTokens: 6000,
+      tier: "fast",
       fixture: "focusGroup",
       usage: { ...usage, operation: "focusGroup" },
     });

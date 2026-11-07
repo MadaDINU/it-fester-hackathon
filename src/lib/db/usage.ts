@@ -3,11 +3,14 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export type UsageTag = { operation: string; brandId?: string; campaignId?: string };
 
-export function computeCostEur(inputTokens: number, outputTokens: number): number {
-  return (
-    (inputTokens / 1e6) * env.AI_PRICE_INPUT_EUR_PER_MTOK +
-    (outputTokens / 1e6) * env.AI_PRICE_OUTPUT_EUR_PER_MTOK
-  );
+export type ModelTier = "main" | "fast";
+
+export function computeCostEur(inputTokens: number, outputTokens: number, tier: ModelTier = "main"): number {
+  const [priceIn, priceOut] =
+    tier === "fast"
+      ? [env.AI_PRICE_FAST_INPUT_EUR_PER_MTOK, env.AI_PRICE_FAST_OUTPUT_EUR_PER_MTOK]
+      : [env.AI_PRICE_INPUT_EUR_PER_MTOK, env.AI_PRICE_OUTPUT_EUR_PER_MTOK];
+  return (inputTokens / 1e6) * priceIn + (outputTokens / 1e6) * priceOut;
 }
 
 // A metering failure must never fail the AI call, so this logs instead of throwing.
@@ -17,6 +20,7 @@ export async function recordUsage(entry: UsageTag & {
   outputTokens: number;
   estimated: boolean;
   latencyMs: number;
+  tier?: ModelTier;
 }): Promise<void> {
   try {
     const { error } = await supabaseAdmin.from("ai_usage").insert({
@@ -26,7 +30,7 @@ export async function recordUsage(entry: UsageTag & {
       provider: entry.provider,
       input_tokens: entry.inputTokens,
       output_tokens: entry.outputTokens,
-      cost_eur: computeCostEur(entry.inputTokens, entry.outputTokens),
+      cost_eur: computeCostEur(entry.inputTokens, entry.outputTokens, entry.tier),
       estimated: entry.estimated,
       latency_ms: entry.latencyMs,
     });

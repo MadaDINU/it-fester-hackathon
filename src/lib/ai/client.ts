@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { z } from "zod";
 import { agentFixtures } from "@/lib/ai/agent-fixtures";
-import { recordUsage, type UsageTag } from "@/lib/db/usage";
+import { recordUsage, type ModelTier, type UsageTag } from "@/lib/db/usage";
 import { env } from "@/lib/env";
 
 const TIMEOUT_MS = 50_000;
@@ -33,6 +33,7 @@ type GenerateOptions<T> = {
   // Accepted for the BLUEPRINT 5.1 signature but not sent: current models reject sampling parameters.
   temperature?: number;
   maxTokens?: number;
+  tier?: ModelTier; // "fast" uses ANTHROPIC_MODEL_FAST
   fixture: string;
   usage: UsageTag;
 };
@@ -51,11 +52,20 @@ async function generateMock<T>(opts: GenerateOptions<T>): Promise<T> {
     outputTokens: Math.ceil(JSON.stringify(fixture).length / 4),
     estimated: true,
     latencyMs: Date.now() - started,
+    tier: opts.tier,
   });
   return result.data;
 }
 
+// Without this, thinking consumes max_tokens and most of the time budget.
+function thinkingOff(model: string) {
+  if (model === "claude-sonnet-5-5") return { thinking: { type: "between_tools" as const } };
+  if (model === "claude-haiku-5-5") return { thinking: { type: "disabled" as const } };
+  return {};
+}
+
 async function generateAnthropic<T>(opts: GenerateOptions<T>): Promise<T> {
+  const model = opts.tier === "fast" ? env.ANTHROPIC_MODEL_FAST : env.ANTHROPIC_MODEL;
   if (!env.ANTHROPIC_API_KEY) throw new AIError("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 0 });
   // All attempts share one budget so a retry cannot outlive the route's maxDuration.
@@ -72,14 +82,11 @@ async function generateAnthropic<T>(opts: GenerateOptions<T>): Promise<T> {
     try {
       response = await client.messages.create(
         {
-          model: env.ANTHROPIC_MODEL,
+          model,
           max_tokens: opts.maxTokens ?? 4000,
           system: opts.system + JSON_ONLY,
           messages,
-          // Without this, thinking consumes max_tokens and most of the time budget.
-          ...(env.ANTHROPIC_MODEL === "claude-sonnet-5-5"
-            ? { thinking: { type: "between_tools" as const } }
-            : {}),
+          ...thinkingOff(model),
         },
         { timeout: remaining },
       );
@@ -95,6 +102,7 @@ async function generateAnthropic<T>(opts: GenerateOptions<T>): Promise<T> {
       outputTokens: response.usage.output_tokens,
       estimated: false,
       latencyMs: Date.now() - started,
+      tier: opts.tier,
     });
 
     if (response.stop_reason === "refusal") throw new AIError("The model declined the request");

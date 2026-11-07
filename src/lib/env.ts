@@ -17,8 +17,15 @@ const EnvSchema = z.object({
     z.string().default("claude-sonnet-5-5"),
   ),
 
+  ANTHROPIC_MODEL_FAST: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.string().default("claude-haiku-5-5"),
+  ),
+
   AI_PRICE_INPUT_EUR_PER_MTOK: num(3),
   AI_PRICE_OUTPUT_EUR_PER_MTOK: num(14),
+  AI_PRICE_FAST_INPUT_EUR_PER_MTOK: num(0.1),
+  AI_PRICE_FAST_OUTPUT_EUR_PER_MTOK: num(0.5),
   VALUE_HOURLY_RATE_EUR: num(20),
   VALUE_MINUTES_SAVED_PER_CAMPAIGN: num(120),
 
