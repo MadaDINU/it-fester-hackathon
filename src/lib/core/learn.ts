@@ -22,6 +22,16 @@ export function sourceNote(trainedOn: TModelState["trainedOn"]): string {
   return "";
 }
 
+const NICHE_PREFIX = "[From niche brief] ";
+
+// Backstop for the prompt rule: evidence without any number is not data-backed, so it is
+// labelled as coming from the niche description and capped at low confidence.
+export function withoutDataMarked<T extends { evidence: string; confidence: TLearning["confidence"] }>(l: T): T {
+  if (/\d/.test(l.evidence) && !l.evidence.startsWith(NICHE_PREFIX)) return l;
+  const evidence = l.evidence.startsWith(NICHE_PREFIX) ? l.evidence : NICHE_PREFIX + l.evidence;
+  return { ...l, evidence, confidence: "low" };
+}
+
 export async function runLearning(
   brandId: string,
 ): Promise<{ learnings: TLearning[]; model: TModelState } | null> {
@@ -62,6 +72,9 @@ export async function runLearning(
   });
 
   // The Learning contract has no source field, so non-live provenance is stated in the evidence.
-  const labelled = learnings.map((l) => ({ ...l, evidence: sourceNote(model.trainedOn) + l.evidence }));
+  const labelled = learnings.map((l) => {
+    const checked = withoutDataMarked(l);
+    return { ...checked, evidence: sourceNote(model.trainedOn) + checked.evidence };
+  });
   return { learnings: await insertLearnings(brandId, labelled), model };
 }

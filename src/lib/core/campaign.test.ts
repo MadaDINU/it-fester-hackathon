@@ -54,3 +54,16 @@ describe("learning source note", () => {
     expect(sourceNote("live")).toBe("");
   });
 });
+
+describe("learnings without data", () => {
+  it("marks evidence without numbers as niche brief, low confidence", async () => {
+    const { withoutDataMarked } = await import("@/lib/core/learn");
+    expect(withoutDataMarked({ evidence: "Audience praises motivation", confidence: "high" as const })).toEqual({
+      evidence: "[From niche brief] Audience praises motivation",
+      confidence: "low",
+    });
+    expect(withoutDataMarked({ evidence: "[From niche brief] x 5", confidence: "medium" as const }).confidence).toBe("low");
+    const backed = { evidence: "isReel = 0.38 on 30 posts", confidence: "medium" as const };
+    expect(withoutDataMarked(backed)).toBe(backed);
+  });
+});
