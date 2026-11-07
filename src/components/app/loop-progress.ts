@@ -1,4 +1,5 @@
 import type { TBrandWithContext, TCampaign, TDashboard } from "@/lib/contracts";
+import { copy } from "./copy";
 
 export type Step<K extends string = string> = { key: K; label: string; done: boolean };
 export type BrandStepKey = "import" | "audience" | "campaign" | "publish" | "simulate" | "learn";
@@ -21,23 +22,23 @@ export function brandLoop({ brand, campaigns, dashboard, audienceSeen }: { brand
   const simulatedDates = (dashboard?.series ?? []).filter(point => point.source === "simulated").map(point => point.date).sort();
   const lastSimulated = simulatedDates.at(-1);
   const raw: Step<BrandStepKey>[] = [
-    { key: "import", label: "Import account", done: brand.importedPosts > 0 },
-    { key: "audience", label: "Review audience", done: audienceSeen || generated.length > 0 },
-    { key: "campaign", label: "Create campaign", done: generated.length > 0 },
-    { key: "publish", label: "Publish", done: generated.some(isPublishedCampaign) },
-    { key: "simulate", label: "Simulate", done: lastSimulated !== undefined },
-    { key: "learn", label: "Run learning loop", done: lastSimulated !== undefined && brand.learnings.some(l => l.createdAt >= lastSimulated) },
+    { key: "import", label: copy.loop.brand.import, done: brand.importedPosts > 0 },
+    { key: "audience", label: copy.loop.brand.audience, done: audienceSeen || generated.length > 0 },
+    { key: "campaign", label: copy.loop.brand.campaign, done: generated.length > 0 },
+    { key: "publish", label: copy.loop.brand.publish, done: generated.some(isPublishedCampaign) },
+    { key: "simulate", label: copy.loop.brand.simulate, done: lastSimulated !== undefined },
+    { key: "learn", label: copy.loop.brand.learn, done: lastSimulated !== undefined && brand.learnings.some(l => l.createdAt >= lastSimulated) },
   ];
   return cascade(raw);
 }
 
 export function studioLoop({ campaign, rendered, published, simulated, learned }: { campaign: TCampaign; rendered: boolean; published: boolean; simulated: boolean; learned: boolean }): Step<StudioStepKey>[] {
   const raw: Step<StudioStepKey>[] = [
-    { key: "generated", label: "Generated", done: campaign.variants.length > 0 },
-    { key: "creative", label: "Creative", done: rendered || campaign.variants.some(v => v.imageUrl !== null) },
-    { key: "published", label: "Published", done: published || isPublishedCampaign(campaign) },
-    { key: "simulated", label: "Simulated", done: simulated },
-    { key: "learned", label: "Learned", done: learned },
+    { key: "generated", label: copy.loop.studio.generated, done: campaign.variants.length > 0 },
+    { key: "creative", label: copy.loop.studio.creative, done: rendered || campaign.variants.some(v => v.imageUrl !== null) },
+    { key: "published", label: copy.loop.studio.published, done: published || isPublishedCampaign(campaign) },
+    { key: "simulated", label: copy.loop.studio.simulated, done: simulated },
+    { key: "learned", label: copy.loop.studio.learned, done: learned },
   ];
   return cascade(raw);
 }

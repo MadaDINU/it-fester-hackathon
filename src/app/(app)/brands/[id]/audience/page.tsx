@@ -6,12 +6,11 @@ import type { TBrandWithContext } from "@/lib/contracts";
 import { api } from "@/lib/api-client";
 import { AudienceDemographics, AudienceWhatWorks, BrandDnaPanel, PersonaCards } from "@/components/app/intelligence-panels";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/app/page-states";
-import { NewCampaignButton } from "@/components/app/brand-sidebar";
 import { InfoTip } from "@/components/app/info-tip";
 import { audienceSeenKey } from "@/components/app/loop-progress";
 
 function Section({ id, title, delay, children }: { id: string; title: string; delay: number; children: ReactNode }) {
-  return <section aria-labelledby={id} className="lw-rise" style={{ "--lw-delay": `${delay}ms` } as CSSProperties}><h2 id={id} className="mb-4 text-xl font-semibold tracking-tight text-[#20232D]">{title}</h2>{children}</section>;
+  return <section aria-labelledby={id} className="lw-rise" style={{ "--lw-delay": `${delay}ms` } as CSSProperties}><h2 id={id} className="mb-4 text-xl font-semibold tracking-tight text-fg">{title}</h2>{children}</section>;
 }
 
 export default function AudiencePage() {
@@ -26,7 +25,7 @@ export default function AudiencePage() {
   }, [id]);
   useEffect(() => { void load(); }, [load]);
   return <main>
-    <PageHeader title="Audience" description={brand ? `Who follows ${brand.name}, what they respond to and when they show up.` : "Who follows you, what they respond to and when they show up."} action={<NewCampaignButton brandId={id} />} />
+    <PageHeader title="Audience" description={brand ? `Who follows ${brand.name}, what they respond to and when they show up.` : "Who follows you, what they respond to and when they show up."} />
     {error && <ErrorState message={error} onRetry={() => void load()} />}
     {loading ? <LoadingState label="Loading audience…" /> : brand && <div className="space-y-8">
       <Section id="personas-title" title="Meet your audience" delay={0}>{brand.personas.length ? <PersonaCards personas={brand.personas} /> : <EmptyState title="No personas yet" description="Personas appear after Loopwise analyses your Instagram history." />}</Section>

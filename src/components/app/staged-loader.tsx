@@ -9,5 +9,5 @@ export function StagedLoader({ stages }: { stages: readonly string[] }) {
     const timer = setInterval(() => setStage(current => Math.min(current + 1, stages.length - 1)), 4000);
     return () => clearInterval(timer);
   }, [stages.length]);
-  return <div role="status" aria-live="polite" className="rounded-xl border border-violet-200 bg-violet-50 p-5 text-violet-950"><div className="flex items-center gap-3 font-medium"><LoaderCircle aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" />{stages[stage]}</div><p className="mt-2 text-xs leading-relaxed text-violet-800">Indicative workflow stages. Completion is confirmed by the server; this is not a live progress measurement.</p></div>;
+  return <div role="status" aria-live="polite" className="rounded-xl border border-primary/30 bg-primary-soft p-5 text-fg"><div className="flex items-center gap-3 font-medium"><LoaderCircle aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" />{stages[stage]}</div><p className="mt-2 text-xs leading-relaxed text-primary-ink">Indicative workflow stages. Completion is confirmed by the server; this is not a live progress measurement.</p></div>;
 }

@@ -1,11 +1,12 @@
 import type { TCampaign } from "@/lib/contracts";
+import { copy } from "./copy";
 
 // One colour per campaign status, used everywhere a status is shown.
 const STYLES: Record<TCampaign["status"], { label: string; className: string }> = {
-  generating: { label: "Generating", className: "border-[#E6E7ED] bg-white text-[#5B6170]" },
-  ready: { label: "Ready to publish", className: "border-[#DDD0FB] bg-[#F3EEFF] text-[#6D28D9]" },
-  published: { label: "Published", className: "border-emerald-200 bg-emerald-50 text-emerald-800" },
-  failed: { label: "Failed", className: "border-red-200 bg-red-50 text-red-800" },
+  generating: { label: copy.status.generating, className: "border-border bg-surface text-fg-muted" },
+  ready: { label: copy.status.ready, className: "border-primary/30 bg-primary-soft text-primary-ink" },
+  published: { label: copy.status.published, className: "border-success/30 bg-success-soft text-success-ink" },
+  failed: { label: copy.status.failed, className: "border-danger/30 bg-danger-soft text-danger-ink" },
 };
 export const STATUS_LABEL = (status: TCampaign["status"]) => STYLES[status].label;
 
