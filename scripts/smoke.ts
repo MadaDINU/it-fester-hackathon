@@ -1,5 +1,7 @@
 // End-to-end API check. Usage: BASE_URL=https://... npx tsx scripts/smoke.ts
 // Creates data in the target database. With AI_PROVIDER=anthropic on the server it spends tokens.
+import { readFileSync } from "node:fs";
+
 const BASE_URL = (process.env.BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 type Json = Record<string, unknown>;
@@ -30,6 +32,14 @@ async function call(path: string, body?: unknown): Promise<Json> {
   return JSON.parse(text) as Json;
 }
 
+function cachedSnapshotIsLive(): boolean {
+  try {
+    return (JSON.parse(readFileSync("data/ig-snapshot.json", "utf8")) as { mode?: string }).mode === "live";
+  } catch {
+    return false;
+  }
+}
+
 function check(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
 }
@@ -37,11 +47,20 @@ function check(condition: unknown, message: string) {
 async function main() {
   console.log(`Smoke test against ${BASE_URL}`);
 
-  await step("health", async () => {
-    const health = await call("/api/health");
-    check(health.db === true, `db is ${health.db}`);
-    console.log(`      ai=${health.aiProvider} publish=${health.publishMode} ig=${health.igDataMode}`);
+  const health = await step("health", async () => {
+    const result = await call("/api/health");
+    check(result.db === true, `db is ${result.db}`);
+    console.log(`      ai=${result.aiProvider} publish=${result.publishMode} ig=${result.igDataMode}`);
+    return result;
   });
+
+  // With mock AI, importing the real account (live, or its cached live snapshot) would overwrite
+  // the real brand's DNA and personas with fixture data in the shared database.
+  if (health?.aiProvider === "mock" && (health.igDataMode === "live" || cachedSnapshotIsLive()) && !process.env.SMOKE_ALLOW_REAL_BRAND) {
+    console.log("STOP  mock AI would overwrite the real brand: set IG_DATA_MODE=mock and move data/ig-snapshot.json aside, or set SMOKE_ALLOW_REAL_BRAND=1");
+    process.exitCode = 1;
+    return;
+  }
 
   const brand = await step("from-instagram", async () => {
     const result = await call("/api/brands/from-instagram", { limit: 30 });
