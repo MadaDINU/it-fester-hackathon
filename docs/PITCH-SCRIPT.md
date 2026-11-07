@@ -59,13 +59,13 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 | # | Click | Ce spunem |
 |---|---|---|
 | 1 | **Brand** (Actul 1, real) | „Un cont mare, dar adormit: 134.585 de urmăritori, 0 postări.” Arătăm demografia reală și cele 4 persona; fiecare citează procentele reale în `groundedIn`. Secțiunile de performanță arată „Available after your first posts”. |
-| 2 | **Campanie nouă** (Actul 1, real): goal *followers*, formats *reel + post*, brief „Relaunch: first 3 posts to re-engage 134k dormant followers” | Vezi narațiunea de mai jos. Pe laptop durează ~50 s; dacă trece de 60 s, deschidem campania pregătită. |
+| 2 | **Campanie nouă** (Actul 1, real): goal *followers*, formats *reel + post*, **Number of variants: 3**, brief „Relaunch: first 3 posts to re-engage 134k dormant followers” | Vezi narațiunea de mai jos. Cu 3 variante, estimat **~40 s** pe laptop; dacă trece de 60 s, deschidem campania pregătită. |
 | 3 | **Creative + publicare** (mock) | „Nu publicăm nimic pe contul real în demo; pentru contul principal e nevoie de confirmare explicită.” Arătăm notificarea pe Discord, dacă e configurat. |
 | 4 | **Community** (Actul 1, real) | „Fără comentarii încă: ideile de loialitate vin din audiență.” Click „Turn into campaign” pe o idee. |
 | 5 | **Analytics** (Actul 2, simulat) | „După prima lună, simulat și declarat.” Arătăm badge-ul „Simulated history”, R² 0,89 și learnings-urile cu cifre. „Run learning loop” doar dacă avem timp. |
 | 6 | Încheiere | Fraza finală din secțiunea 1. |
 
-**Ce spunem în cele ~40 s cât se generează campania**
+**Ce spunem în cele ~40 s cât se generează campania (3 variante)**
 1. 0–15 s, Creator: „Creatorul scrie variantele pe baza brandului, persona și ultimelor learnings. Fiecare reel are hook, scene, text pe ecran, note de editare și o notă pentru TikTok.”
 2. 15–30 s, focus group: „Acum fiecare persona reacționează la fiecare variantă, într-un singur apel. O să vedeți că nu sunt de acord între ele.”
 3. 30–40 s, predicția ML: „Modelul estimează engagement-ul fiecărei variante. Rangul final e jumătate scor de panel, jumătate predicție.”
