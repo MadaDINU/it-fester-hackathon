@@ -162,6 +162,7 @@ export const Variant = z.object({
   rank: z.number().int().min(1),
   status: z.enum(["draft", "approved", "published"]),
   appliedLearningIds: z.array(uuid),
+  learningCompliance: z.array(z.object({ learningId: uuid, respected: z.boolean() })).default([]),
 });
 
 export const AICost = z.object({
