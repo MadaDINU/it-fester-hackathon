@@ -27,18 +27,20 @@ function isValidSlackWebhook(urlStr: string): boolean {
   }
 }
 
-async function sendWebhook(url: string, body: unknown): Promise<void> {
+// Logs the outcome without the webhook URL (it is a secret). Never throws, so a failed notification never blocks a campaign.
+async function sendWebhook(url: string, body: unknown, channel: "discord" | "slack"): Promise<void> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
-    await fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
-  } catch {
-    // errors swallowed
+    if (!res.ok) console.warn("notify: webhook responded", res.status, `(${channel})`);
+  } catch (error) {
+    console.warn("notify: webhook failed", error instanceof Error ? error.name : "UnknownError", `(${channel})`);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -59,11 +61,11 @@ export async function notifyCampaignReady(campaign: TCampaign): Promise<void> {
     const tasks: Promise<unknown>[] = [];
 
     if (discordUrl && isValidDiscordWebhook(discordUrl)) {
-      tasks.push(sendWebhook(discordUrl, payload.discord));
+      tasks.push(sendWebhook(discordUrl, payload.discord, "discord"));
     }
 
     if (slackUrl && isValidSlackWebhook(slackUrl)) {
-      tasks.push(sendWebhook(slackUrl, payload.slack));
+      tasks.push(sendWebhook(slackUrl, payload.slack, "slack"));
     }
 
     if (tasks.length > 0) {
@@ -80,11 +82,11 @@ export function buildCampaignNotification(campaign: TCampaign, appUrl: string) {
   const base = new URL(appUrl);
   if (!["http:", "https:"].includes(base.protocol)) throw new Error("Invalid application URL");
   const studio = new URL(`/campaigns/${encodeURIComponent(campaign.id)}`, base).toString();
-  const score = winner.panelScore === null ? "Unavailable" : `${winner.panelScore}/100`;
+  const score = winner.panelScore === null ? "Unavailable" : `${Math.round(winner.panelScore)}/100`;
   const predicted =
     winner.predictedEngagementRate === null
       ? "Unavailable"
-      : `${(winner.predictedEngagementRate * 100).toFixed(1)}%`;
+      : `${Number((winner.predictedEngagementRate * 100).toFixed(1))}%`;
   const brief = campaign.brief.slice(0, 3000);
   const caption = winner.caption.slice(0, 1000) || "No caption";
   return {

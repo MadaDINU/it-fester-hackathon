@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import type { z } from "zod";
 import { MOCK_PERSONA_IDS } from "@/lib/ai/agent-fixtures";
 import { generateJSON } from "@/lib/ai/client";
@@ -202,6 +203,13 @@ export async function createCampaign(req: TCreateCampaignRequest): Promise<TCamp
 
   const campaign = await getCampaign(campaignId);
   if (!campaign) throw new Error("Campaign disappeared after creation");
-  notifyCampaignReady(campaign).catch((err) => console.error("notify failed:", err));
+  const notify = () => notifyCampaignReady(campaign).catch((err) => console.error("notify failed:", err));
+  try {
+    // On Vercel the function is frozen after the response; after() keeps it alive until notify finishes.
+    after(notify);
+  } catch {
+    // Outside a request (scripts such as prepare-demo), after() throws: notify directly.
+    void notify();
+  }
   return campaign;
 }
