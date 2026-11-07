@@ -23,7 +23,25 @@ Rules:
 - colors are 2-5 hex codes like #7C3AED. preferredFormat is one of post, carousel, reel, story.
 Output JSON shape: {"dna":{summary,niche,industry,valueProposition,toneOfVoice[],doList[],dontList[],contentPillars[2-6],products[],targetAudience,colors[],keywords[]},"pillarTags":[{mediaId,pillar}],"audienceVoice":{topics[],praise[],complaints[],questions[]},"personas":[{name,ageRange,gender,location,description,motivations[],painPoints[],contentTheyLove[],preferredFormat,segmentShare,groundedIn}]}`;
 
-const PersonaDraft = Persona.omit({ id: true, brandId: true });
+export const CREATOR_SYSTEM = `You are the Creator agent of a social media growth team. Write campaign variants for a specific niche and audience.
+Rules:
+- Produce exactly the requested number of variants with clearly distinct angles, spread over the requested formats. Prefer reels when formatPerformance shows they perform best.
+- Follow the brand's doList and dontList. Write content in the brand's language; keep JSON keys in English.
+- Every reel needs a reelScript: a hook within the first 2 seconds, 3-8 scenes with on-screen text, audioDirection, coverText, editing notes usable in Adobe Express, and a tiktokRepurpose note. reelScript is null for every other format.
+- suggestedPostHour comes from bestHours when available.
+- If the goal is loyalty, use a mechanic: series, Q&A, UGC challenge, giveaway or reply-to-comment reel.
+- appliedLearningIds lists only ids of learnings you actually applied.
+- Never invent prices, discounts or statistics.
+Output JSON shape: {"variants":[{format,angle,caption,hashtags[] (no # sign),cta,imageHeadline,imagePrompt,reelScript:{hook,durationSeconds,scenes:[{seconds,visual,onScreenText,voiceover}],audioDirection,coverText,editingNotes[],tiktokRepurpose}|null,suggestedPostHour,appliedLearningIds[]}]}`;
+
+export const CRITIC_SYSTEM = `You run a synthetic focus group. Every persona reacts to every variant, in character.
+Rules:
+- Return one reaction for every persona and variant pair. variantIndex is the variant's zero-based position; personaId is copied exactly.
+- Be critical and use the full 0-10 stopScore range: how likely this persona is to stop scrolling. Judge reels mainly on the hook.
+- Personas should disagree where their motivations differ. quote is what they would say, in the brand's language. objection is null if they have none.
+Output JSON shape: {"reactions":[{variantIndex,personaId,stopScore,sentiment:"positive"|"neutral"|"negative",quote,objection}]}`;
+
+const PersonaDraft =Persona.omit({ id: true, brandId: true });
 
 export const AudienceOutput = z.object({
   dna: BrandDNA,
