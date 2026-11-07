@@ -135,22 +135,48 @@ type MetricJoin = {
   };
 };
 
-// Every post of the brand with a measured reach, using each publication's latest metrics.
+type MetricRowKey = { id: string; publication_id: string; captured_at: string };
+
+// One row per publication: the most recent capture wins, ties broken by id. Repeated
+// simulations add rows, and must not add samples.
+export function latestPerPublication<T extends MetricRowKey>(rows: T[]): T[] {
+  const latest = new Map<string, T>();
+  for (const row of rows) {
+    const current = latest.get(row.publication_id);
+    const newer =
+      !current ||
+      Date.parse(row.captured_at) > Date.parse(current.captured_at) ||
+      (row.captured_at === current.captured_at && row.id > current.id);
+    if (newer) latest.set(row.publication_id, row);
+  }
+  return [...latest.values()];
+}
+
+const PAGE = 1000;
+
+async function fetchBrandMetrics<T>(brandId: string, columns: string): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabaseAdmin
+      .from("metrics")
+      .select(`id, publication_id, captured_at, reach, ${columns}`)
+      .eq("publications.variants.campaigns.brand_id", brandId)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(error.message);
+    rows.push(...(data as unknown as T[]));
+    if (data.length < PAGE) return rows;
+  }
+}
+
+// Every post of the brand with a measured reach in its latest metrics (reach 0 = insights missing).
 export async function listMeasuredPosts(brandId: string): Promise<MeasuredPost[]> {
-  const { data, error } = await supabaseAdmin
-    .from("metrics")
-    .select(
-      "publication_id, engagement_rate, source, publications!inner(variants!inner(format, caption, hashtags, panel_score, suggested_post_hour, campaigns!inner(brand_id)))",
-    )
-    .eq("publications.variants.campaigns.brand_id", brandId)
-    .gt("reach", 0)
-    .order("captured_at");
-  if (error) throw new Error(error.message);
+  const rows = await fetchBrandMetrics<MetricJoin & MetricRowKey & { reach: number }>(
+    brandId,
+    "engagement_rate, source, publications!inner(variants!inner(format, caption, hashtags, panel_score, suggested_post_hour, campaigns!inner(brand_id)))",
+  );
 
-  const latest = new Map<string, MetricJoin>();
-  for (const row of data as unknown as MetricJoin[]) latest.set(row.publication_id, row);
-
-  return [...latest.values()].map((row) => {
+  return latestPerPublication(rows).filter((row) => Number(row.reach) > 0).map((row) => {
     const v = row.publications.variants;
     return {
       input: {
@@ -197,28 +223,15 @@ type DashboardJoin = {
   };
 };
 
-const PAGE = 1000;
-
 // Posts with a measured reach (reach = 0 means insights are missing), latest metrics per publication.
 export async function listDashboardPosts(brandId: string): Promise<DashboardPost[]> {
-  const latest = new Map<string, DashboardJoin>();
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabaseAdmin
-      .from("metrics")
-      .select(
-        "publication_id, reach, engagement_rate, source, publications!inner(permalink, published_at, variants!inner(id, caption, format, image_url, predicted_engagement_rate, campaigns!inner(brand_id)))",
-      )
-      .eq("publications.variants.campaigns.brand_id", brandId)
-      .order("captured_at")
-      .order("id")
-      .range(from, from + PAGE - 1);
-    if (error) throw new Error(error.message);
-    for (const row of data as unknown as DashboardJoin[]) latest.set(row.publication_id, row);
-    if (data.length < PAGE) break;
-  }
+  const rows = await fetchBrandMetrics<DashboardJoin & MetricRowKey>(
+    brandId,
+    "engagement_rate, source, publications!inner(permalink, published_at, variants!inner(id, caption, format, image_url, predicted_engagement_rate, campaigns!inner(brand_id)))",
+  );
 
   // The latest metrics decide whether a post counts: insights missing there means reach 0.
-  return [...latest.values()]
+  return latestPerPublication(rows)
     .filter((row) => Number(row.reach) > 0)
     .map((row) => {
       const v = row.publications.variants;
