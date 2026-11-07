@@ -9,6 +9,7 @@ It builds personas from the account's demographics, writes posts and reels, test
 
 - Slides content: [docs/PITCH-SLIDES.md](docs/PITCH-SLIDES.md)
 - Running the demo: [docs/LOCAL-DEMO.md](docs/LOCAL-DEMO.md)
+- For judges and organizers: [docs/SUBMISSION.md](docs/SUBMISSION.md)
 
 > The main demo runs locally (`npm run demo:build && npm run demo:start`); the production URL above is the backup.
 
