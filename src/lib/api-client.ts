@@ -10,6 +10,13 @@ const healthResponse = z.object({ ok: z.boolean(), db: z.boolean(), aiProvider: 
 const segment = (id: string) => encodeURIComponent(z.string().min(1).parse(id));
 const mockMode = () => process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
+export class ApiClientError extends Error {
+  constructor(message: string, public readonly status: number, public readonly code?: string) {
+    super(message);
+    this.name = "ApiClientError";
+  }
+}
+
 async function request<S extends z.ZodType>(path: string, schema: S, mock: () => unknown, body?: unknown, useMock = mockMode()): Promise<z.output<S>> {
   if (useMock) return schema.parse(structuredClone(mock()));
   let response: Response;
@@ -27,8 +34,8 @@ async function request<S extends z.ZodType>(path: string, schema: S, mock: () =>
   try { data = await response.json(); }
   catch { throw new Error(`Invalid JSON from API (HTTP ${response.status})`); }
   const apiError = C.ApiError.safeParse(data);
-  if (apiError.success) throw new Error(apiError.data.error.message);
-  if (!response.ok) throw new Error(`API request failed (HTTP ${response.status})`);
+  if (apiError.success) throw new ApiClientError(apiError.data.error.message, response.status, apiError.data.error.code);
+  if (!response.ok) throw new ApiClientError(`API request failed (HTTP ${response.status})`, response.status);
   const parsed = schema.safeParse(data);
   if (!parsed.success) throw new Error(`Invalid API response for ${path}`);
   return parsed.data;
