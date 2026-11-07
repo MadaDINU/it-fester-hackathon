@@ -160,3 +160,47 @@ describe("notifyCampaignReady", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 });
+
+describe("sendWebhook logging", () => {
+  const HOOK = "https://discord.com/api/webhooks/123/secret-token";
+  const warnings = () => (console.warn as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+
+  beforeEach(() => { vi.spyOn(console, "warn").mockImplementation(() => {}); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("warns with the status and never the URL when the webhook answers 404", async () => {
+    vi.stubEnv("DISCORD_WEBHOOK_URL", HOOK);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
+    await notifyCampaignReady(mockCampaign);
+    expect(warnings()).toEqual([["notify: webhook responded", 404, "(discord)"]]);
+    expect(JSON.stringify(warnings())).not.toContain("secret-token");
+  });
+
+  it("stays quiet on 204", async () => {
+    vi.stubEnv("DISCORD_WEBHOOK_URL", HOOK);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+    await notifyCampaignReady(mockCampaign);
+    expect(warnings()).toEqual([]);
+  });
+
+  it("warns with the error name on a timeout and does not throw", async () => {
+    vi.stubEnv("DISCORD_WEBHOOK_URL", HOOK);
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(Object.assign(new Error("aborted"), { name: "AbortError" })));
+    await expect(notifyCampaignReady(mockCampaign)).resolves.toBeUndefined();
+    expect(warnings()).toEqual([["notify: webhook failed", "AbortError", "(discord)"]]);
+    expect(JSON.stringify(warnings())).not.toContain("secret-token");
+  });
+
+  it("does not call fetch without webhook env vars", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await notifyCampaignReady(mockCampaign);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rounds a noisy panel score in the message", () => {
+    const payload = buildCampaignNotification({ ...mockCampaign, variants: [{ ...mockCampaign.variants[0], panelScore: 58.00000000000001 }] }, "https://loopwise.example");
+    expect(JSON.stringify(payload)).toContain("58/100");
+    expect(JSON.stringify(payload)).not.toContain("58.0000");
+  });
+});
