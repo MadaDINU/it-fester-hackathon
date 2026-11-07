@@ -70,7 +70,8 @@ describe("API client", () => {
     expect(created.variants[1].format).toBe("carousel");
     expect(created.variants[0].reelScript).not.toBeNull();
     const variantId = mockCampaign.variants[0].id;
-    expect((await api.renderVariant(variantId)).imageUrl).toMatch(/^https:/);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ imageUrl: "data:image/jpeg;base64,/9j/" }))));
+    expect((await api.renderVariant(variantId)).imageUrl).toMatch(/^data:image/);
     expect(api.creativeUrl(variantId)).toBe(`/api/creative/${variantId}`);
     const publication = await api.publishVariant(variantId, { platform: "instagram" });
     expect(publication.account).toBe("publish");
