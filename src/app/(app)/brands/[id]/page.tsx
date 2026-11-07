@@ -34,10 +34,10 @@ const STEP_TEXT: Record<BrandStepKey | "done", string> = {
 };
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB");
 const rise = (ms: number) => ({ "--lw-delay": `${ms}ms` }) as CSSProperties;
-const panelLink = "inline-flex min-h-11 items-center gap-1 text-sm font-medium text-[#6D28D9] hover:underline";
+const panelLink = "inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary-ink hover:underline";
 
 function Kpi({ label, tip, children }: { label: string; tip?: ReactNode; children: ReactNode }) {
-  return <div className="rounded-xl border border-[#E6E7ED] bg-white p-4 sm:p-5"><p className="flex items-center gap-1.5 text-sm text-[#5B6170]">{label}{tip}</p><div className="mt-3 flex min-h-11 flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight text-[#20232D] sm:gap-3 sm:text-3xl">{children}</div></div>;
+  return <div className="rounded-xl border border-border bg-surface p-4 sm:p-5"><p className="flex items-center gap-1.5 text-sm text-fg-muted">{label}{tip}</p><div className="mt-3 flex min-h-11 flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight text-fg sm:gap-3 sm:text-3xl">{children}</div></div>;
 }
 
 export default function BrandOverviewPage() {
@@ -73,7 +73,7 @@ export default function BrandOverviewPage() {
       const result = await api.learn(id);
       setBrand(current => current ? { ...current, learnings: result.learnings } : current);
       setDashboard(current => current ? { ...current, model: result.model } : current);
-      toast.success(`Learning loop complete · ${isColdStartModel(result.model) || result.model.r2 === null ? COLD_START_LABEL : `R² ${formatR2(result.model.r2)}`}${process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? " · demo model" : ""}`);
+      toast.success(`Learning loop complete · ${isColdStartModel(result.model) || result.model.r2 === null ? COLD_START_LABEL : `R² ${formatR2(result.model.r2, "ro-RO")}`}${process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? " · demo model" : ""}`);
     }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to run learning loop"); }
     finally { setBusy(null); }
@@ -102,45 +102,45 @@ export default function BrandOverviewPage() {
 
   return <main>
     <PageHeader title={brand.name}
-      leading={<span className="hidden sm:block"><LoopRing value={1} size={56} stroke={3} label={`${brand.name} loop`}><span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-[#7C3AED] text-base font-semibold text-white">{brand.name.trim().charAt(0).toUpperCase()}</span></LoopRing></span>}
-      description={<><p>Overview{brand.instagram && <> · @{brand.instagram.username}</>} · where your growth loop stands and what to do next</p><div className="mt-2 flex flex-wrap gap-2">{[brand.dna.niche, brand.dna.industry].filter(Boolean).map(tag => <span key={tag} className="rounded-full bg-[#F3EEFF] px-3 py-1 text-xs font-medium text-[#6D28D9]">{tag}</span>)}</div></>}
-      action={<>{brand.instagram && step?.key !== "import" && <Button variant="outline" className="min-h-11" disabled={busy !== null} onClick={() => void refresh()}><RefreshCw className={busy === "refresh" ? "animate-spin motion-reduce:animate-none" : ""} aria-hidden="true" />Refresh</Button>}{step && step.key !== "campaign" && <NewCampaignButton brandId={id} primary={false} />}</>} />
+      leading={<span className="hidden sm:block"><LoopRing value={1} size={56} stroke={3} label={`${brand.name} loop`}><span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-primary text-base font-semibold text-white">{brand.name.trim().charAt(0).toUpperCase()}</span></LoopRing></span>}
+      description={<><p>Overview{brand.instagram && <> · @{brand.instagram.username}</>} · where your growth loop stands and what to do next</p><div className="mt-2 flex flex-wrap gap-2">{[brand.dna.niche, brand.dna.industry].filter(Boolean).map(tag => <span key={tag} className="rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary-ink">{tag}</span>)}</div></>}
+      action={<>{brand.instagram && step?.key !== "import" && <Button variant="outline" className="min-h-11" disabled={busy !== null} onClick={() => void refresh()}><RefreshCw className={busy === "refresh" ? "animate-spin motion-reduce:animate-none" : ""} aria-hidden="true" />Refresh</Button>}</>} />
     {error && <div className="mb-8"><ErrorState message={error} onRetry={() => void load()} /></div>}
     <div className="flex flex-col gap-8">
       <section aria-labelledby="kpi-title" className="lw-rise">
-        <div className="mb-4 flex flex-wrap items-center gap-3"><h2 id="kpi-title" className="text-base font-semibold text-[#20232D]">At a glance</h2>{simulatedData && <SimulatedBadge />}</div>
+        <div className="mb-4 flex flex-wrap items-center gap-3"><h2 id="kpi-title" className="text-base font-semibold text-fg">At a glance</h2>{simulatedData && <SimulatedBadge />}</div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <Kpi label="Followers">{brand.instagram ? <CountUp value={brand.instagram.followers} /> : <span className="text-base font-medium text-[#5B6170]">Not connected</span>}</Kpi>
+          <Kpi label="Followers">{brand.instagram ? <CountUp value={brand.instagram.followers} /> : <span className="text-base font-medium text-fg-muted">Not connected</span>}</Kpi>
           <Kpi label="Imported posts"><CountUp value={brand.importedPosts} /></Kpi>
-          <Kpi label="Avg. engagement rate" tip={<InfoTip id="er" />}>{dashboard && dashboard.totals.posts > 0 ? <CountUp value={dashboard.totals.avgEngagementRate * 100} format={n => formatPercent(n, "en-US", { alreadyPercent: true })} /> : <span className="text-base font-medium text-[#5B6170]">No results yet</span>}</Kpi>
-          <Kpi label="Model" tip={<InfoTip id={isColdStartModel(model) ? "coldStart" : "r2"} />}>{!model || isColdStartModel(model) ? <><LoopRing value={0} pulse size={44} stroke={5} label="Cold start model, no fit yet" /><span className="text-xl">Cold start</span></> : <><LoopRing value={Math.max(0, model.r2 ?? 0)} size={44} stroke={5} label={`Model fit R² ${formatR2(model.r2)}`} /><span>R² <CountUp value={model.r2 ?? 0} format={n => formatR2(n)} /></span></>}</Kpi>
+          <Kpi label="Avg. engagement rate" tip={<InfoTip id="er" />}>{dashboard && dashboard.totals.posts > 0 ? <CountUp value={dashboard.totals.avgEngagementRate * 100} format={n => formatPercent(n, "ro-RO", { alreadyPercent: true })} /> : <span className="text-base font-medium text-fg-muted">No results yet</span>}</Kpi>
+          <Kpi label="Model" tip={<InfoTip id={isColdStartModel(model) ? "coldStart" : "r2"} />}>{!model || isColdStartModel(model) ? <><LoopRing value={0} pulse size={44} stroke={5} label="Cold start model, no fit yet" /><span className="text-xl">Cold start</span></> : <><LoopRing value={Math.max(0, model.r2 ?? 0)} size={44} stroke={5} label={`Model fit R² ${formatR2(model.r2, "ro-RO")}`} /><span>R² <CountUp value={model.r2 ?? 0} format={n => formatR2(n, "ro-RO")} /></span></>}</Kpi>
         </div>
       </section>
 
-      <section aria-labelledby="next-title" className="lw-rise order-first rounded-xl sm:order-none border-2 border-[#7C3AED] bg-white p-6" style={rise(60)}>
-        <div className="flex flex-wrap items-center justify-between gap-2"><h2 id="next-title" className="text-base font-semibold text-[#20232D]">Next step</h2><p className="text-xs font-medium text-[#5B6170]">{step ? `Step ${index + 1} of ${steps.length}` : `All ${steps.length} steps done`}</p></div>
+      <section aria-labelledby="next-title" className="lw-rise order-first rounded-xl sm:order-none border-2 border-primary bg-surface p-6" style={rise(60)}>
+        <div className="flex flex-wrap items-center justify-between gap-2"><h2 id="next-title" className="text-base font-semibold text-fg">Next step</h2><p className="text-xs font-medium text-fg-muted">{step ? `Step ${index + 1} of ${steps.length}` : `All ${steps.length} steps done`}</p></div>
         <div className="mt-4"><LoopSteps steps={steps} label="Growth loop progress" /></div>
-        <div className="mt-6 flex flex-col gap-4 rounded-lg bg-[#F3EEFF] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="text-lg font-semibold text-[#20232D]">{step ? step.label : "Start the next loop"}</p><p className="mt-1 max-w-[60ch] text-sm text-[#5B6170]">{STEP_TEXT[step?.key ?? "done"]}</p></div>
+        <div className="mt-6 flex flex-col gap-4 rounded-lg bg-primary-soft p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="text-lg font-semibold text-fg">{step ? step.label : "Start the next loop"}</p><p className="mt-1 max-w-[60ch] text-sm text-fg-muted">{STEP_TEXT[step?.key ?? "done"]}</p></div>
           <div className="shrink-0">{stepAction}</div>
         </div>
       </section>
 
       <div className="lw-rise grid gap-6 lg:grid-cols-3" style={rise(120)}>
         <SectionCard title="Recent campaigns" action={generated.length > 0 && <Link href={`${base}/campaigns`} className={panelLink}>View all<ChevronRight className="size-4" aria-hidden="true" /></Link>}>
-          {campaignError ? <p role="status" className="text-sm text-amber-800">Campaign list unavailable: {campaignError}</p>
-            : generated.length ? <ul className="-my-2 divide-y divide-[#E6E7ED]">{generated.slice(0, 3).map(c => <li key={c.id}><Link href={`/campaigns/${c.id}`} className="group flex min-h-16 items-center gap-3 py-3"><div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-medium text-[#20232D] group-hover:text-[#6D28D9]">{c.brief}</p><div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-[#5B6170]"><StatusBadge status={c.status} />{date(c.createdAt)}</div></div><ChevronRight className="size-4 shrink-0 text-[#5B6170]" aria-hidden="true" /></Link></li>)}</ul>
-            : <div className="text-sm text-[#5B6170]"><p>No campaigns yet. Start with one clear idea.</p><Link href={`${base}/campaigns/new`} className={`${panelLink} mt-2`}>Create your first campaign</Link></div>}
+          {campaignError ? <p role="status" className="text-sm text-warning-ink">Campaign list unavailable: {campaignError}</p>
+            : generated.length ? <ul className="-my-2 divide-y divide-border">{generated.slice(0, 3).map(c => <li key={c.id}><Link href={`/campaigns/${c.id}`} className="group flex min-h-16 items-center gap-3 py-3"><div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-medium text-fg group-hover:text-primary-ink">{c.brief}</p><div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-fg-muted"><StatusBadge status={c.status} />{date(c.createdAt)}</div></div><ChevronRight className="size-4 shrink-0 text-fg-muted" aria-hidden="true" /></Link></li>)}</ul>
+            : <div className="text-sm text-fg-muted"><p>No campaigns yet. Start with one clear idea.</p><Link href={`${base}/campaigns/new`} className={`${panelLink} mt-2`}>Create your first campaign</Link></div>}
         </SectionCard>
         <SectionCard title="What we learned" action={<Link href={`${base}/analytics`} className={panelLink}>Analytics<ChevronRight className="size-4" aria-hidden="true" /></Link>}>
-          {learnings.length ? <ul className="space-y-3">{learnings.map(l => <li key={l.id} className="rounded-lg border border-[#E6E7ED] p-3"><p className="text-sm font-medium text-[#20232D]">{stripSimulatedPrefix(l.insight)}</p><p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#5B6170]">{l.confidence} confidence · {date(l.createdAt)}{(isSimulatedLearning(l.insight) || isSimulatedLearning(l.evidence)) && <SimulatedBadge />}</p></li>)}</ul>
-            : <p className="text-sm text-[#5B6170]">No learnings yet. Publish and simulate a campaign, then run the learning loop.</p>}
+          {learnings.length ? <ul className="space-y-3">{learnings.map(l => <li key={l.id} className="rounded-lg border border-border p-3"><p className="text-sm font-medium text-fg">{stripSimulatedPrefix(l.insight)}</p><p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-fg-muted">{l.confidence} confidence · {date(l.createdAt)}{(isSimulatedLearning(l.insight) || isSimulatedLearning(l.evidence)) && <SimulatedBadge />}</p></li>)}</ul>
+            : <p className="text-sm text-fg-muted">No learnings yet. Publish and simulate a campaign, then run the learning loop.</p>}
           {step?.key !== "learn" && learnButton(false)}
         </SectionCard>
         <SectionCard title="Community" action={<Link href={`${base}/community`} className={panelLink}>Open<ChevronRight className="size-4" aria-hidden="true" /></Link>}>
-          {stats ? <><dl className="grid grid-cols-3 gap-3 text-center">{([["Positive", stats.positiveShare], ["Negative", stats.negativeShare], ["Questions", stats.questionShare]] as const).map(([label, share]) => <div key={label} className="rounded-lg bg-[#F7F8FA] p-3"><dt className="text-xs text-[#5B6170]">{label}</dt><dd className="mt-1 text-xl font-semibold tabular-nums text-[#20232D]">{formatPercent(share)}</dd></div>)}</dl><p className="text-sm text-[#5B6170]">{stats.total} comments · {stats.pending} waiting for a reply</p>{community?.summary?.topTopics.length ? <div className="flex flex-wrap gap-2">{community.summary.topTopics.slice(0, 4).map(t => <span key={t} className="rounded-full bg-[#F3EEFF] px-3 py-1 text-xs font-medium text-[#6D28D9]">{t}</span>)}</div> : null}</>
-            : community?.loyaltyIdeas.length ? <><p className="text-sm text-[#5B6170]">No comments yet. Loyalty ideas to start the conversation:</p><ul className="space-y-3">{community.loyaltyIdeas.slice(0, 2).map(idea => <li key={idea.title} className="rounded-lg border border-[#E6E7ED] p-3"><p className="text-sm font-medium text-[#20232D]">{idea.title}</p><p className="mt-1 text-xs text-[#5B6170]">{formatMechanic(idea.mechanic)}</p></li>)}</ul></>
-            : <p className="text-sm text-[#5B6170]">No comments or loyalty ideas yet. Open Community to run the Community agent.</p>}
+          {stats ? <><dl className="grid grid-cols-3 gap-3 text-center">{([["Positive", stats.positiveShare], ["Negative", stats.negativeShare], ["Questions", stats.questionShare]] as const).map(([label, share]) => <div key={label} className="rounded-lg bg-surface-2 p-3"><dt className="text-xs text-fg-muted">{label}</dt><dd className="mt-1 text-xl font-semibold tabular-nums text-fg">{formatPercent(share, "ro-RO")}</dd></div>)}</dl><p className="text-sm text-fg-muted">{stats.total} comments · {stats.pending} waiting for a reply</p>{community?.summary?.topTopics.length ? <div className="flex flex-wrap gap-2">{community.summary.topTopics.slice(0, 4).map(t => <span key={t} className="rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary-ink">{t}</span>)}</div> : null}</>
+            : community?.loyaltyIdeas.length ? <><p className="text-sm text-fg-muted">No comments yet. Loyalty ideas to start the conversation:</p><ul className="space-y-3">{community.loyaltyIdeas.slice(0, 2).map(idea => <li key={idea.title} className="rounded-lg border border-border p-3"><p className="text-sm font-medium text-fg">{idea.title}</p><p className="mt-1 text-xs text-fg-muted">{formatMechanic(idea.mechanic)}</p></li>)}</ul></>
+            : <p className="text-sm text-fg-muted">No comments or loyalty ideas yet. Open Community to run the Community agent.</p>}
         </SectionCard>
       </div>
     </div>

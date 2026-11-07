@@ -21,10 +21,10 @@ export function LoopRing({ value, size = 96, stroke, label, spinning = false, pu
   const tip = `${c + r},${c - arrow * 1.1} ${c + r - arrow * 0.75},${c + arrow * 0.1} ${c + r + arrow * 0.75},${c + arrow * 0.1}`;
   return <span className={`relative inline-grid shrink-0 place-items-center ${className}`} style={{ width: size, height: size }}>
     <svg role="img" aria-label={label} viewBox={`0 0 ${size} ${size}`} width={size} height={size} className={`${spinning ? "lw-spin" : ""} ${pulse ? "lw-pulse" : ""}`}>
-      <circle cx={c} cy={c} r={r} fill="none" stroke="#F3EEFF" strokeWidth={width} strokeLinecap="round" strokeDasharray={`${arc} ${circumference}`} />
-      <circle className="lw-ring-progress" cx={c} cy={c} r={r} fill="none" stroke="#7C3AED" strokeWidth={width} strokeLinecap="round" strokeDasharray={`${arc * shown} ${circumference}`} />
-      <polygon points={tip} fill={shown > 0 ? "#7C3AED" : "#E6E7ED"} strokeLinejoin="round" />
-      {!children && <circle cx={c} cy={c} r={Math.max(2.5, size * 0.07)} fill="#F59E0B" />}
+      <circle cx={c} cy={c} r={r} fill="none" stroke="var(--primary-soft)" strokeWidth={width} strokeLinecap="round" strokeDasharray={`${arc} ${circumference}`} />
+      <circle className="lw-ring-progress" cx={c} cy={c} r={r} fill="none" stroke="var(--primary)" strokeWidth={width} strokeLinecap="round" strokeDasharray={`${arc * shown} ${circumference}`} />
+      <polygon points={tip} fill={shown > 0 ? "var(--primary)" : "var(--border)"} strokeLinejoin="round" />
+      {!children && <circle cx={c} cy={c} r={Math.max(2.5, size * 0.07)} fill="var(--warning)" />}
     </svg>
     {children && <span className="absolute inset-0 grid place-items-center text-center">{children}</span>}
   </span>;
