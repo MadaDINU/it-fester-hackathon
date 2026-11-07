@@ -18,6 +18,8 @@ Pentru Madalin (deck). Cifrele sunt măsurate pe 7 nov 2026. Ce nu e confirmat e
 - **Actul 1, real:** import live, persona reale, campania „Relaunch: first 3 posts to re-engage 134k dormant followers”.
 - Focus group-ul de 4 persona reacționează; modelul estimează engagement-ul; câștigătoarea e un reel.
 - Notificare pe **Discord** pentru aprobare umană: AI-ul nu postează singur.
+- Creativul se editează în **Adobe Express** și se salvează înapoi în campanie.
+- **3 integrări terțe reale:** Instagram Graph API (live), Discord, Adobe Express.
 - **Actul 2, simulat și declarat:** „după prima lună” (30 de postări simulate), cu R² 0,89 și learnings cu badge.
 
 ## 4. Sub capotă
@@ -29,7 +31,7 @@ Pentru Madalin (deck). Cifrele sunt măsurate pe 7 nov 2026. Ce nu e confirmat e
 ## 5. Cost vs valoare (măsurat)
 - Brand nou (import + audiență): **~€0,026**. Campanie (4 variante + focus group): **~€0,04–0,05**.
 - **~€0,01 per post variant** (campaign cost ÷ variants). Learning loop: **~€0,013**. Community: **~€0,001**.
-- Tot hackathonul, cu toate testele pe AI real: **~€0,52**.
+- Tot hackathonul, cu toate testele pe AI real: **~€0,58** (€0,33 contorizat + ~€0,25 înainte de contorizare).
 - Valoare: ~2 h de muncă manuală per campanie, adică ~€40 la €20/h (ipoteză editabilă în aplicație).
 
 ## 6. Transparență: ce e real și ce e simulat
@@ -40,7 +42,7 @@ Pentru Madalin (deck). Cifrele sunt măsurate pe 7 nov 2026. Ce nu e confirmat e
 | Notificarea Discord | **Real** (livrare confirmată) |
 | Istoricul de 30 de postări, R² 0,89, learnings | **Simulat**, etichetat în aplicație |
 | Publicare pe Instagram | **Mock**: nu postăm pe contul real |
-| Editare în Adobe Express | **În curs de confirmare** |
+| Editare în Adobe Express | **Real** (confirmat pe producție) |
 
 ## 7. Business și roadmap
 - **Starter €19/lună**, **Growth €49/lună**, **Max €149/lună**.
@@ -53,6 +55,6 @@ Pentru Madalin (deck). Cifrele sunt măsurate pe 7 nov 2026. Ce nu e confirmat e
 | Problemă | 25% | Cont real de 134k, 0 postări, −921 urmăritori în 30 de zile |
 | Inovație AI | 25% | 5 agenți, focus group sintetic, model antrenat pe cont, buclă de învățare |
 | Tehnic | 25% | Rutare Sonnet/Haiku, validare Zod, buget în cod, 162 de teste, Supabase cu RLS |
-| Integrări | 15% | Instagram Graph API (live), Discord (confirmat); Adobe Express în curs de confirmare |
+| Integrări | 15% | 3 integrări terțe reale: Instagram Graph API (live), Discord, Adobe Express |
 | Demo | 10% | Demo live pe contul real, cu planuri de rezervă |
-| Bonus cost vs valoare | +10% | ~€0,05 per campanie, măsurat; ~€0,52 tot hackathonul |
+| Bonus cost vs valoare | +10% | ~€0,05 per campanie, măsurat; ~€0,58 tot hackathonul |
