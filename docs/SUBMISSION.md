@@ -20,6 +20,7 @@ After each post it learns from the results, and it keeps followers engaged with 
 ## Integrations
 - **Instagram Graph API** (graph.facebook.com v27.0): live read of profile, demographics, media, insights and comments.
 - **Discord:** campaign-ready notification for human approval; delivery confirmed.
+- **Adobe Express Embed SDK:** edit a creative in Adobe Express and save it back to the campaign; confirmed on the production URL.
 - **Anthropic:** Claude Sonnet 5.5 writes, Claude Haiku 5.5 evaluates.
 - **Supabase:** Postgres with row-level security and Storage for creatives.
 - **Vercel:** hosting.
@@ -30,7 +31,7 @@ After each post it learns from the results, and it keeps followers engaged with 
 | Problem | 25% | Real account @ironcladwind: 134,585 followers, 0 posts, −921 net followers in 30 days |
 | AI innovation | 25% | 5 cooperating agents (`src/lib/core/`), synthetic focus group (`campaign.ts`), predictor trained on the account (`src/lib/ml/`), learning loop with learning-compliance check |
 | Technical | 25% | Zod contracts for every API and LLM output (`src/lib/contracts.ts`); model routing Sonnet/Haiku (campaign 57 s → 39–52 s); AI budget guard returning 402 (`src/lib/ai/client.ts`); 160+ automated tests; RLS-protected Postgres |
-| Integrations | 15% | Instagram Graph API live (`src/lib/integrations/instagram.ts`), Discord confirmed (`notify.ts`), Supabase, Vercel, Anthropic |
+| Integrations | 15% | 3 third-party integrations confirmed: Instagram Graph API live (`src/lib/integrations/instagram.ts`), Discord (`notify.ts`), Adobe Express Embed SDK (`adobe-express.ts`); plus Supabase, Vercel, Anthropic |
 | Demo | 10% | Live on the real account, with prepared fallbacks (`docs/LOCAL-DEMO.md`, `scripts/rehearsal-check.ts`) |
 | Bonus: cost vs value | +10% | Every AI call metered in `ai_usage`; ~€0.05 per campaign; ROI meter in the app |
 
@@ -40,6 +41,7 @@ After each post it learns from the results, and it keeps followers engaged with 
 | Followers, 0 posts, −921 in 30 days, demographics | **Real** |
 | Niche, personas, campaign, loyalty ideas | **AI-generated** from the real data |
 | Discord notification | **Real** (delivery confirmed) |
+| Adobe Express editing | **Real** (confirmed on the production URL) |
 | 30-post history, R² 0.89, learnings | **Simulated**, labelled "Simulated history" in the app |
 | Publishing to Instagram | **Mock**: nothing is posted to the real account |
 
@@ -51,7 +53,7 @@ After each post it learns from the results, and it keeps followers engaged with 
 | Per post variant (campaign ÷ variants) | ~€0.01 |
 | Learning loop | ~€0.013 |
 | Community | ~€0.001 |
-| Whole hackathon, all real-AI tests | ~€0.52 |
+| Whole hackathon, all real-AI tests | ~€0.58 (€0.33 metered in `ai_usage` + ~€0.25 before metering) |
 
 ## Running it
 See [LOCAL-DEMO.md](LOCAL-DEMO.md).
@@ -61,4 +63,5 @@ See [LOCAL-DEMO.md](LOCAL-DEMO.md).
 - **Simulated history:** the learning loop is shown on 30 simulated posts, labelled as such; the R² is not a result for the account.
 - **Publishing is mocked:** no post is ever sent to Instagram in this build.
 - **Meta App Review:** reading accounts other than the app's testers requires Meta App Review.
+- **Adobe Express needs HTTPS:** the editor opens on the production URL, not on `http://localhost`.
 - **Latency:** a campaign takes ~40–52 s (3–4 variants), close to the 60 s function limit on Vercel; the main demo runs locally.
