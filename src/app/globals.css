@@ -128,3 +128,30 @@
     @apply font-sans;
   }
 }
+/* Loopwise motion: reactive only; everything stops under prefers-reduced-motion. */
+:root { interpolate-size: allow-keywords; }
+@keyframes lw-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes lw-settle { 0% { box-shadow: 0 0 0 0 rgb(124 58 237 / 0); } 35% { box-shadow: 0 0 0 6px rgb(124 58 237 / 0.18); } 100% { box-shadow: 0 0 0 0 rgb(124 58 237 / 0); } }
+@keyframes lw-grow { from { transform: scaleX(0); } }
+@keyframes lw-spin { to { transform: rotate(360deg); } }
+@keyframes lw-pulse { 50% { opacity: 0.45; } }
+@keyframes lw-check { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+.lw-rise { animation: lw-rise 400ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: var(--lw-delay, 0ms); }
+.lw-settle { animation: lw-rise 400ms cubic-bezier(0.22, 1, 0.36, 1) both, lw-settle 900ms ease-out 420ms both; }
+.lw-grow { transform-origin: left center; animation: lw-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.lw-spin { animation: lw-spin 1.6s linear infinite; transform-origin: center; }
+.lw-pulse { animation: lw-pulse 2.4s ease-in-out infinite; }
+.lw-check path { stroke-dasharray: 24; animation: lw-check 400ms ease-out both; }
+.lw-ring-progress { transition: stroke-dasharray 900ms cubic-bezier(0.22, 1, 0.36, 1); }
+.lw-underline { transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), width 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.lw-chevron { transition: rotate 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+details[open] > summary .lw-chevron { rotate: 180deg; }
+details::details-content { block-size: 0; overflow: hidden; transition: block-size 300ms cubic-bezier(0.22, 1, 0.36, 1), content-visibility 300ms allow-discrete; }
+details[open]::details-content { block-size: auto; }
+button { transition-property: color, background-color, border-color, transform; }
+button:active:not(:disabled) { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  .lw-rise, .lw-settle, .lw-grow, .lw-spin, .lw-pulse, .lw-check path { animation: none !important; }
+  .lw-ring-progress, .lw-underline, .lw-chevron, details::details-content { transition: none !important; }
+  button:active:not(:disabled) { transform: none; }
+}

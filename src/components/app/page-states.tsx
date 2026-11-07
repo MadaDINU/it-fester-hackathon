@@ -4,8 +4,8 @@ import { AlertCircle, ChevronLeft, Layers3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function PageHeader({ title, description, action, breadcrumb }: { title: string; description?: string; action?: ReactNode; breadcrumb?: boolean }) {
-  return <div className="mb-8">{breadcrumb && <Link href="/brands" className="mb-2 inline-flex min-h-6 items-center gap-1 rounded-lg text-xs font-medium text-[#5B6170] hover:text-[#6D28D9]"><ChevronLeft className="size-3.5" aria-hidden="true" />Brands</Link>}<div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0"><h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#20232D]">{title}</h1>{description && <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-[#5B6170]">{description}</p>}</div>{action && <div className="flex flex-wrap items-center gap-2 sm:ml-auto">{action}</div>}</div></div>;
+export function PageHeader({ title, description, action, breadcrumb, leading }: { title: string; description?: ReactNode; action?: ReactNode; breadcrumb?: boolean; leading?: ReactNode }) {
+  return <div className="mb-8">{breadcrumb && <Link href="/brands" className="mb-2 inline-flex min-h-6 items-center gap-1 rounded-lg text-xs font-medium text-[#5B6170] hover:text-[#6D28D9]"><ChevronLeft className="size-3.5" aria-hidden="true" />Brands</Link>}<div className="flex flex-wrap items-start justify-between gap-4"><div className="flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center">{leading}<div className="min-w-0"><h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#20232D]">{title}</h1>{description && <div className="mt-2 max-w-[65ch] text-sm leading-relaxed text-[#5B6170]">{description}</div>}</div></div>{action && <div className="flex flex-wrap items-center gap-2 sm:ml-auto">{action}</div>}</div></div>;
 }
 
 export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
