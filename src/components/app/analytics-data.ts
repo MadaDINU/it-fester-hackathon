@@ -1,5 +1,11 @@
 import type { TDashboard } from "@/lib/contracts";
 
+export const COLD_START_LABEL = "Cold start: prior model, learns from your first posts";
+// The backend marks a cold-start model with prior weights and r2 null; few samples means R² is not meaningful yet.
+export function isColdStartModel(model: { r2: number | null; samples: number } | null | undefined) {
+  return !model || model.r2 === null || model.samples < 8;
+}
+
 export function topModelWeights(weights: Record<string, number>) {
   return Object.entries(weights).map(([name, value]) => ({ name, value })).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 3);
 }

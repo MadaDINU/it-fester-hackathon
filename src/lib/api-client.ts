@@ -1,6 +1,7 @@
 import { z } from "zod";
 import * as C from "@/lib/contracts";
 import { mockBrand, mockCampaign, mockCommunity, mockDashboard } from "@/lib/mock/fixtures";
+import { mockFreshBrand, mockFreshCommunity, mockFreshDashboard } from "@/lib/mock/fresh-account";
 
 const renderRequest = z.object({ imageBase64: z.string().min(1).optional() });
 const renderResponse = z.object({ imageUrl: z.string().url() });
@@ -41,7 +42,10 @@ async function request<S extends z.ZodType>(path: string, schema: S, mock: () =>
   return parsed.data;
 }
 
+// The fresh-account fixture is reachable only by its id, to demo cold-start states.
+const fresh = (id: string) => id === mockFreshBrand.id;
 function brand(id: string) {
+  if (fresh(id)) return mockFreshBrand;
   if (id !== mockBrand.id) throw new Error("Brand not found in mock data");
   return mockBrand;
 }
@@ -68,10 +72,10 @@ export const api = {
     const body = C.AnalyzeBrandRequest.parse(input);
     return request("/brands/analyze", C.BrandWithContext, () => ({ ...mockBrand, name: body.name, websiteUrl: body.url ?? null, instagram: null }), body);
   },
-  learn: (id: string) => request(`/brands/${segment(id)}/learn`, learnResponse, () => ({ learnings: brand(id).learnings, model: mockDashboard.model }), {}),
-  getDashboard: (id: string) => request(`/brands/${segment(id)}/dashboard`, C.Dashboard, () => { brand(id); return mockDashboard; }),
-  getCommunity: (id: string) => request(`/brands/${segment(id)}/community`, C.Community, () => { brand(id); return mockCommunity; }),
-  runCommunity: (id: string) => request(`/brands/${segment(id)}/community`, C.Community, () => { brand(id); return mockCommunity; }, {}),
+  learn: (id: string) => request(`/brands/${segment(id)}/learn`, learnResponse, () => ({ learnings: brand(id).learnings, model: fresh(id) ? mockFreshDashboard.model : mockDashboard.model }), {}),
+  getDashboard: (id: string) => request(`/brands/${segment(id)}/dashboard`, C.Dashboard, () => { brand(id); return fresh(id) ? mockFreshDashboard : mockDashboard; }),
+  getCommunity: (id: string) => request(`/brands/${segment(id)}/community`, C.Community, () => { brand(id); return fresh(id) ? mockFreshCommunity : mockCommunity; }),
+  runCommunity: (id: string) => request(`/brands/${segment(id)}/community`, C.Community, () => { brand(id); return fresh(id) ? mockFreshCommunity : mockCommunity; }, {}),
   listCampaigns: (brandId: string) => request(`/campaigns?brandId=${segment(brandId)}`, z.array(C.Campaign), () => { brand(brandId); return [mockCampaign]; }),
   getCampaign: (id: string) => request(`/campaigns/${segment(id)}`, C.Campaign, () => campaign(id)),
   createCampaign: async (input: z.input<typeof C.CreateCampaignRequest>) => {

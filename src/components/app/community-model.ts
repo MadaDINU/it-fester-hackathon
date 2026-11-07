@@ -11,6 +11,10 @@ export type CommentFilters = {
   status?: StatusFilter;
 };
 
+export function isFreshCommunity(community: { comments: unknown[]; summary: unknown | null }): boolean {
+  return community.comments.length === 0 && community.summary === null;
+}
+
 export function filterComments<
   T extends Pick<CommunityComment, "text" | "sentiment" | "isQuestion"> & {
     topic?: string | null;
