@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BrandWithContext, Campaign, Community, Dashboard } from "@/lib/contracts";
 import { mockBrand, mockCampaign, mockCommunity, mockDashboard } from "./fixtures";
-import { api } from "../api-client";
+import { api, ApiClientError } from "../api-client";
 
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
@@ -16,6 +16,13 @@ describe("M1 fixtures", () => {
 });
 
 describe("API client", () => {
+  it("exposes HTTP 422 for the onboarding description fallback", async () => {
+    vi.stubEnv("NEXT_PUBLIC_USE_MOCKS", "false");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: "UNREACHABLE", message: "Add a description" } }), { status: 422 })));
+    const error = await api.analyzeBrand({ name: "Cafe", url: "https://example.com" }).catch(e => e);
+    expect(error).toBeInstanceOf(ApiClientError);
+    expect(error).toMatchObject({ status: 422, message: "Add a description" });
+  });
   it("uses mocks without network and returns isolated copies", async () => {
     vi.stubEnv("NEXT_PUBLIC_USE_MOCKS", "true");
     const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
