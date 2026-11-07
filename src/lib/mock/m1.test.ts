@@ -16,12 +16,12 @@ describe("M1 fixtures", () => {
 });
 
 describe("API client", () => {
-  it("exposes HTTP 422 for the onboarding description fallback", async () => {
+  it("preserves the backend HTTP status and error code for M2's 422 fallback", async () => {
     vi.stubEnv("NEXT_PUBLIC_USE_MOCKS", "false");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: "UNREACHABLE", message: "Add a description" } }), { status: 422 })));
     const error = await api.analyzeBrand({ name: "Cafe", url: "https://example.com" }).catch(e => e);
     expect(error).toBeInstanceOf(ApiClientError);
-    expect(error).toMatchObject({ status: 422, message: "Add a description" });
+    expect(error).toMatchObject({ status: 422, code: "UNREACHABLE", message: "Add a description" });
   });
   it("uses mocks without network and returns isolated copies", async () => {
     vi.stubEnv("NEXT_PUBLIC_USE_MOCKS", "true");
@@ -70,7 +70,8 @@ describe("API client", () => {
     expect(created.variants[1].format).toBe("carousel");
     expect(created.variants[0].reelScript).not.toBeNull();
     const variantId = mockCampaign.variants[0].id;
-    expect((await api.renderVariant(variantId)).imageUrl).toMatch(/^https:/);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ imageUrl: "data:image/jpeg;base64,/9j/" }))));
+    expect((await api.renderVariant(variantId)).imageUrl).toMatch(/^data:image/);
     expect(api.creativeUrl(variantId)).toBe(`/api/creative/${variantId}`);
     const publication = await api.publishVariant(variantId, { platform: "instagram" });
     expect(publication.account).toBe("publish");

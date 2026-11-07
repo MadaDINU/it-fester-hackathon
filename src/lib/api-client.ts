@@ -17,8 +17,8 @@ export class ApiClientError extends Error {
   }
 }
 
-async function request<S extends z.ZodType>(path: string, schema: S, mock: () => unknown, body?: unknown): Promise<z.output<S>> {
-  if (mockMode()) return schema.parse(structuredClone(mock()));
+async function request<S extends z.ZodType>(path: string, schema: S, mock: () => unknown, body?: unknown, useMock = mockMode()): Promise<z.output<S>> {
+  if (useMock) return schema.parse(structuredClone(mock()));
   let response: Response;
   try {
     response = await fetch(`/api${path}`, {
@@ -87,7 +87,8 @@ export const api = {
       }) };
     }, body);
   },
-  renderVariant: (id: string, input: z.input<typeof renderRequest> = {}) => request(`/variants/${segment(id)}/render`, renderResponse, () => { variant(id); return { imageUrl: "https://example.com/demo-creative.jpg" }; }, renderRequest.parse(input)),
+  // The local renderer also works in mock mode and returns actual image bytes as a data URL.
+  renderVariant: (id: string, input: z.input<typeof renderRequest> = {}) => request(`/variants/${segment(id)}/render`, renderResponse, () => null, renderRequest.parse(input), false),
   // This endpoint returns PNG, so it is an image source rather than a JSON fetch.
   creativeUrl: (id: string) => `/api/creative/${segment(id)}`,
   publishVariant: async (id: string, input: z.input<typeof C.PublishRequest>) => {
