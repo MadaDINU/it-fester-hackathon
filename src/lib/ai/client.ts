@@ -29,6 +29,16 @@ export function assertWithinBudget(spentEur: number, budgetEur: number): void {
   }
 }
 
+const LANGUAGE_NAMES: Record<string, string> = { en: "English", ro: "Romanian" };
+
+// Every agent writes all user-facing text in CONTENT_LANGUAGE, whatever language the niche or inputs use.
+export function contentLanguageRule(code: string = env.CONTENT_LANGUAGE): string {
+  const name = LANGUAGE_NAMES[code] ?? code;
+  return `
+
+Content language: ${name}. Write every generated text field in ${name}, even when the inputs are in another language. Keep JSON keys in English.`;
+}
+
 export function parseJSONText(text: string): unknown {
   const trimmed = text.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -98,7 +108,7 @@ async function generateAnthropic<T>(opts: GenerateOptions<T>): Promise<T> {
         {
           model,
           max_tokens: opts.maxTokens ?? 4000,
-          system: opts.system + JSON_ONLY,
+          system: opts.system + contentLanguageRule() + JSON_ONLY,
           messages,
           ...thinkingOff(model),
         },

@@ -49,9 +49,9 @@ export async function runCommunityAgent(brandId: string): Promise<TCommunity | n
   const pending = await listUnprocessedComments(brandId, MAX_UNPROCESSED);
   if (pending.length === 0) {
     // Cold start: no comments yet. The response keeps comments [] and summary null, and gets
-    // loyalty ideas from the DNA and audience in one cheap call, made only once.
+    // loyalty ideas from the DNA and audience in one cheap call. Each run adds 3 ideas; the latest 3 are shown.
     const current = await getCommunity(brandId);
-    if (!current || current.comments.length > 0 || current.loyaltyIdeas.length > 0) return current;
+    if (!current || current.comments.length > 0) return current;
     const ideas = await generateJSON({
       system: COMMUNITY_SYSTEM,
       prompt: JSON.stringify({

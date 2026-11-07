@@ -19,6 +19,8 @@ function checkEnv() {
   if (provider === "anthropic") required.push("ANTHROPIC_API_KEY");
   if (igMode === "live") required.push("IG_MAIN_ACCESS_TOKEN");
   for (const name of required) report(Boolean(process.env[name]), `env ${name}`, process.env[name] ? "set" : "missing");
+  const mocks = process.env.NEXT_PUBLIC_USE_MOCKS;
+  report(mocks === "false", "env NEXT_PUBLIC_USE_MOCKS=false", mocks === undefined ? "missing (rebuild after setting it)" : mocks === "false" ? "ok" : `is ${mocks}: UI shows fixtures (rebuild after fixing)`);
   console.log(`      AI_PROVIDER=${provider}  IG_DATA_MODE=${igMode}  PUBLISH_MODE=${process.env.PUBLISH_MODE || "mock"}`);
 }
 

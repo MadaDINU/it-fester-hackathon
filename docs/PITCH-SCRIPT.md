@@ -18,14 +18,21 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 - „Audience construiește patru persona din date reale.”
 - „Creatorul scrie variantele, inclusiv storyboard de reel.”
 - „Criticul le testează pe persona și cu modelul ML, înainte să postezi.”
-- „Community citește comentariile și propune răspunsuri și idei de loialitate.”
+- „Community propune idei de loialitate din audiență; clasificarea comentariilor și răspunsurile pornesc de la primele comentarii.”
 - „Fiecare postare face următoarea mai bună.”
 
-**Demo (1:20–2:50): cold start și relansare**
-- „Importăm contul real. Nu are nicio postare, dar are 134k de oameni. Din demografia lor reală (bărbați 25–34: 26%, 35–44: 18%; SUA 37%, India 12%) agentul Audience construiește 4 persona și cele 5 piloni de conținut.”
-- „Modelul ML e în cold start: pornește de la ponderi prestabilite și învață din primele postări. Nu inventăm un R².”
-- „Generăm campania de relansare: primele 3 postări care să trezească audiența.”
-- Detaliile pe click în runbook-ul din secțiunea 2.
+**Demo (1:20–2:50), în două acte**
+
+*Actul 1 – REAL: contul de azi (≈60 s)*
+- „Importăm contul real. Nu are nicio postare, dar are 134.585 de oameni. Din demografia lor reală (bărbați 25–34: 26%, 35–44: 18%; SUA 37%, India 12%) agentul Audience construiește 4 persona și pilonii de conținut.”
+- „Modelul ML e în cold start: pornește de la ponderi prestabilite și învață din primele postări.”
+- „Generăm campania de relansare: primele 3 postări care să trezească audiența. Focus group-ul de persona reacționează, modelul estimează, iar câștigătoarea iese în față.”
+- „Community: contul nu are încă comentarii, deci agentul propune idei de loialitate din audiență. Clasificarea și răspunsurile pornesc de la primele comentarii.”
+
+*Actul 2 – SIMULAT ȘI DECLARAT: „după prima lună” (≈30 s)*
+- „Ca să vedeți bucla de învățare, am simulat o lună de postări: 30 de postări, toate etichetate «Simulated history». Nu sunt date ale contului.”
+- „Pe istoricul ăsta modelul ajunge la R² 0,89 și scoate learnings cu cifre: reels și o întrebare în caption ajută, prea multe hashtag-uri strică. Toate au badge-ul de simulat.”
+- „Pe un cont real, aceeași buclă rulează pe postările reale de îndată ce apar.”
 
 **Tehnic (2:50–3:20)**
 - „Next.js, Supabase cu RLS, Anthropic, Instagram Graph API.” (Discord și Adobe Express le spunem doar dacă sunt gata și le arătăm în demo.)
@@ -34,7 +41,7 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 - „Am măsurat și am optimizat: ruta de campanie a scăzut de la 57 s la 39–44 s. Am mutat Criticul pe Haiku și am trimis Creatorului doar un rezumat al audienței.”
 
 **Cost vs valoare (3:20–3:40)**
-- „O campanie costă noi între 0,036 și 0,040 euro. Am măsurat, nu am estimat.”
+- „O campanie costă între 0,036 și 0,05 euro. Pe contul real, campania de relansare a costat 0,039 euro. Am măsurat, nu am estimat.”
 - „Manual, aceeași muncă înseamnă aproximativ 2 ore. La 20 euro pe oră, circa 40 de euro. Ipoteza e editabilă în aplicație.”
 - „ROI meter-ul arată cifrele live din `ai_usage`.”
 
@@ -51,18 +58,18 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 
 | # | Click | Ce spunem |
 |---|---|---|
-| 1 | **Brand** | „Importul arată un cont mare, dar adormit.” Arătăm cine sunt urmăritorii, reels față de postări, orele bune. „Cele 4 persona vin din date reale; fiecare are `groundedIn`.” |
-| 2 | **Analytics** | „Cold start: modelul pornește de la ponderi prestabilite și învață din primele postări.” Dacă am rulat `seed-history.ts`: „Pentru demo am adăugat 30 de postări **simulate**, etichetate «seeded», ca să vedeți bucla de învățare.” Click pe „Run learning loop”. |
-| 3 | **Campanie nouă**: goal *followers*, formats *reel + post*, brief „Relaunch: first 3 posts to re-engage 134k dormant followers” | Vezi narațiunea de mai jos. Pe laptop durează ~50 s. |
-| 4 | **Creative + publicare** (mock, pe contul de test) | „Nu publicăm niciodată pe contul principal din greșeală.” Arătăm mesajul de notificare. |
-| 5 | **Community** | Comentarii reale clasificate, răspunsuri fără promisiuni inventate, o idee de loialitate. Click „Turn into campaign”. |
+| 1 | **Brand** (Actul 1, real) | „Un cont mare, dar adormit: 134.585 de urmăritori, 0 postări.” Arătăm demografia reală și cele 4 persona; fiecare citează procentele reale în `groundedIn`. Secțiunile de performanță arată „Available after your first posts”. |
+| 2 | **Campanie nouă** (Actul 1, real): goal *followers*, formats *reel + post*, brief „Relaunch: first 3 posts to re-engage 134k dormant followers” | Vezi narațiunea de mai jos. Pe laptop durează ~50 s; dacă trece de 60 s, deschidem campania pregătită. |
+| 3 | **Creative + publicare** (mock) | „Nu publicăm nimic pe contul real în demo; pentru contul principal e nevoie de confirmare explicită.” Arătăm notificarea pe Discord, dacă e configurat. |
+| 4 | **Community** (Actul 1, real) | „Fără comentarii încă: ideile de loialitate vin din audiență.” Click „Turn into campaign” pe o idee. |
+| 5 | **Analytics** (Actul 2, simulat) | „După prima lună, simulat și declarat.” Arătăm badge-ul „Simulated history”, R² 0,89 și learnings-urile cu cifre. „Run learning loop” doar dacă avem timp. |
 | 6 | Încheiere | Fraza finală din secțiunea 1. |
 
 **Ce spunem în cele ~40 s cât se generează campania**
 1. 0–15 s, Creator: „Creatorul scrie variantele pe baza brandului, persona și ultimelor learnings. Fiecare reel are hook, scene, text pe ecran, note de editare și o notă pentru TikTok.”
 2. 15–30 s, focus group: „Acum fiecare persona reacționează la fiecare variantă, într-un singur apel. O să vedeți că nu sunt de acord între ele.”
 3. 30–40 s, predicția ML: „Modelul estimează engagement-ul fiecărei variante. Rangul final e jumătate scor de panel, jumătate predicție.”
-4. La final: arătăm câștigătoarea, ROI meter-ul și chip-urile „Uses learning” cu ✓ / ✗ verificat de Critic.
+4. La final: arătăm câștigătoarea, ROI meter-ul și chip-urile „Uses learning” (✓ / ✗ de la Critic doar dacă UI-ul le afișează).
 
 **Planuri de rezervă (LOCAL-DEMO.md, secțiunea 4)**
 
@@ -72,6 +79,25 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 | Instagram cade | `IG_DATA_MODE=mock`: aplicația citește `data/ig-snapshot.json`. |
 | Fără internet | Video-ul înregistrat. |
 | Buget AI atins (402) | Arătăm datele deja generate. Nu mărim bugetul în timpul demo-ului. |
+
+**Ce spunem dacă ceva pică, pe pași**
+
+Linkuri pregătite (brand @ironcladwind, deja importat):
+- Brand: http://localhost:3000/brands/cb86e39b-2a6c-439e-8523-c3436354d665
+- Campania pregătită: http://localhost:3000/campaigns/8af05aef-5e27-4d32-bf90-2dc3d894a511
+- Analytics / Community: linkul de brand + `/analytics` / `/community`
+
+Orice schimbare de variabilă se face în `.env.local`, apoi Ctrl+C pe `demo:start` și `npm run demo:start` din nou (fără rebuild, ~5 s).
+
+| Pas | Ce pică | Ce spunem | Ce facem |
+|---|---|---|---|
+| 1 Brand | Instagram API nu răspunde (eroare 502 la „Refresh data”) | „API-ul Meta are o problemă acum; datele importate azi sunt deja în aplicație.” | Nu reimportăm. Deschidem linkul de brand. Dacă trebuie arătat importul: `IG_DATA_MODE=mock` (citește snapshotul real din `data/ig-snapshot.json`, salvat azi) și repornim. |
+| 2 Analytics | „Run learning loop” durează sau dă eroare | „Modelul s-a antrenat deja; vă arăt learnings-urile de mai devreme.” | Rămânem pe Analytics și pe Brand Memory: learnings-urile sunt deja salvate și etichetate „[Simulated history]”. |
+| 3 Campanie | Generarea trece de ~60 s sau dă „Request timed out” / 502 | „Creatorul scrie 4 variante cu script complet de reel; ca să nu vă ținem, vă arăt una generată azi pe același cont.” | Deschidem linkul campaniei pregătite. Verificăm înainte că `AI_TIMEOUT_MS=110000` e în `.env.local`. Dacă Anthropic e căzut: `AI_PROVIDER=mock`, repornim; spunem că restul demo-ului folosește date generate mai devreme. |
+| 3 Campanie | Eroare 402 „budget_exceeded” | „Avem un plafon de cost pe AI: aplicația se oprește singură înainte să depășească bugetul. Asta e partea de cost control.” | Deschidem campania pregătită. Nu mărim `AI_BUDGET_EUR` pe scenă. |
+| 4 Publicare | Publish sau Simulate sunt blocate în UI („require M6b/M7”) | „Publicarea e intenționat pe mock: nu postăm nimic pe contul real de 134k în demo. Pentru contul principal e nevoie de confirmare explicită.” | Sărim peste click; arătăm dialogul de confirmare pentru contul principal, dacă e activ, și trecem la Community. |
+| 5 Community | „Run Community agent” dă eroare | „Contul nu are încă comentarii; ideile de loialitate sunt deja generate din audiență.” | Arătăm cele 3 idei de loialitate deja salvate (în engleză). |
+| Oricare | Fără internet (Supabase și Anthropic au nevoie de rețea) | „Vă arătăm înregistrarea.” | Pornim video-ul de rezervă. |
 
 ## 3. Întrebări probabile din partea juriului
 
@@ -116,11 +142,12 @@ Toate rămân TBD până le măsurăm pe contul real. Nu le spunem pe scenă pâ
 | Urmăritori (134.585) și postări (0) | **Real** | Instagram API, 7 nov 2026 |
 | Pierdere netă de −921 în 30 de zile | **Real** | Instagram Professional Dashboard |
 | Demografie (vârstă, gen, țări, orașe) | **Real** | `follower_demographics` |
-| Nișa și pilonii de conținut | **Generat de AI** | din profilul real, demografie și descrierea nișei |
+| Nișa și pilonii de conținut | **Generat de AI** (în engleză) | din profilul real, demografie și descrierea nișei |
 | Cele 4 persona | **Generat de AI**, bazat pe date reale | citează procentele reale |
 | Campania „Relaunch” și reacțiile focus group-ului | **Generat de AI** | Sonnet 5.5 + Haiku 5.5 |
+| Ideile de loialitate (Community) | **Generat de AI** | din DNA și audiența reală, nu din comentarii |
 | Predicția ER per variantă | **Model**, ponderi învățate pe date simulate | se va reantrena pe postări reale |
-| Istoricul de 30 de postări și metricile lor | **Simulat** | `seed-history.ts`, etichetat `seeded` |
-| R² 0,89 și cele 5 learnings | **Din date simulate** | demonstrează bucla, nu performanța contului |
+| Istoricul de 30 de postări și metricile lor (Actul 2) | **Simulat** | `seed-history.ts`, etichetat „Simulated history” |
+| R² 0,89 și learnings-urile (Actul 2) | **Din date simulate** | demonstrează bucla, nu performanța contului |
 | Publish și Simulate | **Mock** | nu se publică nimic pe Instagram |
 | Comentarii | **Nu există** | contul nu are postări |
