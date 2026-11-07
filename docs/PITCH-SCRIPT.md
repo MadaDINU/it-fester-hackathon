@@ -108,3 +108,19 @@ Toate rămân TBD până le măsurăm pe contul real. Nu le spunem pe scenă pâ
 - [x] Cost campanie pe contul real: **€0,050** (Creator 41 s + focus group 10 s, ruta 52 s pe laptop)
 - [ ] Cheltuială AI totală: TBD la final (la 7 nov, ~€0,41 înregistrat + estimat)
 - [ ] Dacă rulăm `seed-history.ts`: R² și learnings pe date **simulate**; le prezentăm doar ca demonstrație a buclei
+
+## 5. Slide de transparență: real și simulat în demo
+
+| Element | Real sau simulat | Sursă |
+|---|---|---|
+| Urmăritori (134.585) și postări (0) | **Real** | Instagram API, 7 nov 2026 |
+| Pierdere netă de −921 în 30 de zile | **Real** | Instagram Professional Dashboard |
+| Demografie (vârstă, gen, țări, orașe) | **Real** | `follower_demographics` |
+| Nișa și pilonii de conținut | **Generat de AI** | din profilul real, demografie și descrierea nișei |
+| Cele 4 persona | **Generat de AI**, bazat pe date reale | citează procentele reale |
+| Campania „Relaunch” și reacțiile focus group-ului | **Generat de AI** | Sonnet 5.5 + Haiku 5.5 |
+| Predicția ER per variantă | **Model**, ponderi învățate pe date simulate | se va reantrena pe postări reale |
+| Istoricul de 30 de postări și metricile lor | **Simulat** | `seed-history.ts`, etichetat `seeded` |
+| R² 0,89 și cele 5 learnings | **Din date simulate** | demonstrează bucla, nu performanța contului |
+| Publish și Simulate | **Mock** | nu se publică nimic pe Instagram |
+| Comentarii | **Nu există** | contul nu are postări |
