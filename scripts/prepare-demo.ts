@@ -8,8 +8,7 @@ import { buildBrandFromInstagram } from "../src/lib/core/instagramBrand";
 import { runLearning } from "../src/lib/core/learn";
 import { listCampaigns } from "../src/lib/db/campaigns";
 import { env } from "../src/lib/env";
-
-const DEMO_BRIEF = "Grow followers with content our audience asks for in the comments";
+import { DEMO_BRIEF } from "./demo-config";
 
 async function main() {
   console.log(`AI=${env.AI_PROVIDER} IG=${env.IG_DATA_MODE}`);
