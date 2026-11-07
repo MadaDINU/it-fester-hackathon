@@ -1,3 +1,4 @@
+import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type Route = (url: URL) => { status?: number; body: unknown } | undefined;
@@ -219,6 +220,8 @@ describe("fetchInstagramSnapshot mock", () => {
   it("returns the fixture when no cache exists", async () => {
     vi.resetModules();
     vi.stubEnv("IG_DATA_MODE", "mock");
+    // Point at an empty directory so a real data/ig-snapshot.json does not affect the test.
+    vi.spyOn(process, "cwd").mockReturnValue(tmpdir());
     const { fetchInstagramSnapshot } = await import("@/lib/integrations/instagram");
     const snap = await fetchInstagramSnapshot({ limit: 10 });
     expect(snap.media).toHaveLength(10);
