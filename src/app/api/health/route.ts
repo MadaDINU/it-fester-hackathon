@@ -1,3 +1,4 @@
+import { getTotalAiSpend } from "@/lib/db/usage";
 import { env } from "@/lib/env";
 import { ok } from "@/lib/http";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -18,11 +19,14 @@ async function checkDb(): Promise<boolean> {
 
 export async function GET() {
   const db = await checkDb();
+  const aiSpentEur = db ? await getTotalAiSpend().catch(() => null) : null;
   return ok({
     ok: db,
     db,
     aiProvider: env.AI_PROVIDER,
     publishMode: env.PUBLISH_MODE,
     igDataMode: env.IG_DATA_MODE,
+    aiSpentEur: aiSpentEur === null ? null : Number(aiSpentEur.toFixed(4)),
+    aiBudgetEur: env.AI_BUDGET_EUR,
   });
 }

@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { z } from "zod";
 import { agentFixtures } from "@/lib/ai/agent-fixtures";
-import { recordUsage, type ModelTier, type UsageTag } from "@/lib/db/usage";
+import { getTotalAiSpend, recordUsage, type ModelTier, type UsageTag } from "@/lib/db/usage";
 import { env } from "@/lib/env";
 
 const TIMEOUT_MS = 50_000;
@@ -10,9 +10,23 @@ const MOCK_DELAY_MS = 800;
 const JSON_ONLY = "\n\nRespond with a single valid JSON object and nothing else.";
 
 export class AIError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  constructor(
+    message: string,
+    options?: ErrorOptions & { code?: "BUDGET_EXCEEDED" },
+  ) {
     super(message, options);
     this.name = "AIError";
+    this.code = options?.code;
+  }
+  code?: "BUDGET_EXCEEDED";
+}
+
+export function assertWithinBudget(spentEur: number, budgetEur: number): void {
+  if (spentEur >= budgetEur) {
+    throw new AIError(
+      `AI budget reached: €${spentEur.toFixed(2)} spent of €${budgetEur.toFixed(2)}. Raise AI_BUDGET_EUR or switch AI_PROVIDER to mock.`,
+      { code: "BUDGET_EXCEEDED" },
+    );
   }
 }
 
@@ -76,6 +90,7 @@ async function generateAnthropic<T>(opts: GenerateOptions<T>): Promise<T> {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw new AIError(`Timed out; last error: ${lastError}`);
+    assertWithinBudget(await getTotalAiSpend(), env.AI_BUDGET_EUR);
 
     const started = Date.now();
     let response: Anthropic.Message;
