@@ -16,12 +16,12 @@ describe("M1 fixtures", () => {
 });
 
 describe("API client", () => {
-  it("exposes HTTP 422 for the onboarding description fallback", async () => {
+  it("preserves the backend HTTP status and error code for M2's 422 fallback", async () => {
     vi.stubEnv("NEXT_PUBLIC_USE_MOCKS", "false");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: "UNREACHABLE", message: "Add a description" } }), { status: 422 })));
     const error = await api.analyzeBrand({ name: "Cafe", url: "https://example.com" }).catch(e => e);
     expect(error).toBeInstanceOf(ApiClientError);
-    expect(error).toMatchObject({ status: 422, message: "Add a description" });
+    expect(error).toMatchObject({ status: 422, code: "UNREACHABLE", message: "Add a description" });
   });
   it("uses mocks without network and returns isolated copies", async () => {
     vi.stubEnv("NEXT_PUBLIC_USE_MOCKS", "true");
