@@ -45,3 +45,12 @@ describe("rankScores", () => {
     expect([...rankScores([50, 50], [0.1, 0.1])].sort()).toEqual([1, 2]);
   });
 });
+
+describe("learning source note", () => {
+  it("labels learnings from simulated or mixed history", async () => {
+    const { sourceNote } = await import("@/lib/core/learn");
+    expect(sourceNote("seeded")).toBe("[Simulated history] ");
+    expect(sourceNote("mixed")).toBe("[Real + simulated history] ");
+    expect(sourceNote("live")).toBe("");
+  });
+});

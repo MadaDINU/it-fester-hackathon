@@ -16,6 +16,12 @@ export function trainedOnFor(posts: Array<Pick<MeasuredPost, "source">>): TModel
   return live === 0 ? "seeded" : "mixed";
 }
 
+export function sourceNote(trainedOn: TModelState["trainedOn"]): string {
+  if (trainedOn === "seeded") return "[Simulated history] ";
+  if (trainedOn === "mixed") return "[Real + simulated history] ";
+  return "";
+}
+
 export async function runLearning(
   brandId: string,
 ): Promise<{ learnings: TLearning[]; model: TModelState } | null> {
@@ -55,5 +61,7 @@ export async function runLearning(
     usage: { operation: "learningInsights", brandId },
   });
 
-  return { learnings: await insertLearnings(brandId, learnings), model };
+  // The Learning contract has no source field, so non-live provenance is stated in the evidence.
+  const labelled = learnings.map((l) => ({ ...l, evidence: sourceNote(model.trainedOn) + l.evidence }));
+  return { learnings: await insertLearnings(brandId, labelled), model };
 }
