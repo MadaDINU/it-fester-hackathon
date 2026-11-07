@@ -1,19 +1,19 @@
 import type { ReactNode } from "react";
-import { AlertCircle, Layers3 } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, ChevronLeft, Layers3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function PageHeader({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
-  return <div className="mb-8 flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-3xl font-semibold tracking-tight">{title}</h1>{description && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">{description}</p>}</div>{action}</div>;
+export function PageHeader({ title, description, action, breadcrumb }: { title: string; description?: string; action?: ReactNode; breadcrumb?: boolean }) {
+  return <div className="mb-8">{breadcrumb && <Link href="/brands" className="mb-2 inline-flex min-h-6 items-center gap-1 rounded-lg text-xs font-medium text-[#5B6170] hover:text-[#6D28D9]"><ChevronLeft className="size-3.5" aria-hidden="true" />Brands</Link>}<div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0"><h1 className="text-[28px] font-semibold leading-tight tracking-tight text-[#20232D]">{title}</h1>{description && <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-[#5B6170]">{description}</p>}</div>{action && <div className="flex flex-wrap items-center gap-2 sm:ml-auto">{action}</div>}</div></div>;
 }
 
 export function EmptyState({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
-  return <Card className="border border-dashed border-slate-300 bg-white shadow-none ring-0"><CardHeader className="items-center px-6 pt-8 text-center"><Layers3 className="mb-4 size-8 text-violet-600" aria-hidden="true" /><CardTitle>{title}</CardTitle><CardDescription className="max-w-md">{description}</CardDescription></CardHeader><CardContent className="flex justify-center pb-6">{action}</CardContent></Card>;
+  return <div className="flex flex-col items-center rounded-xl border border-dashed border-[#E6E7ED] bg-white p-6 text-center"><Layers3 className="mb-3 size-6 text-[#7C3AED]" aria-hidden="true" /><h2 className="text-base font-semibold text-[#20232D]">{title}</h2><p className="mt-1 max-w-md text-sm text-[#5B6170]">{description}</p>{action && <div className="mt-4">{action}</div>}</div>;
 }
 
 export function LoadingState({ label = "Loading your workspace…" }: { label?: string }) {
-  return <div role="status" aria-live="polite"><span className="sr-only">{label}</span><div aria-hidden="true" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2].map(i => <div key={i} className="space-y-4 rounded-xl border bg-white p-6"><Skeleton className="h-5 w-1/2 motion-reduce:animate-none" /><Skeleton className="h-24 w-full motion-reduce:animate-none" /><Skeleton className="h-4 w-3/4 motion-reduce:animate-none" /></div>)}</div></div>;
+  return <div role="status" aria-live="polite"><span className="sr-only">{label}</span><div aria-hidden="true" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2].map(i => <div key={i} className="space-y-4 rounded-xl border border-[#E6E7ED] bg-white p-6"><Skeleton className="h-5 w-1/2 motion-reduce:animate-none" /><Skeleton className="h-24 w-full motion-reduce:animate-none" /><Skeleton className="h-4 w-3/4 motion-reduce:animate-none" /></div>)}</div></div>;
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
