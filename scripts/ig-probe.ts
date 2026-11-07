@@ -1,8 +1,17 @@
 // Minimal read-only check of the Instagram token: profile plus one post with insights.
 // Usage: node --env-file=.env.local --import tsx scripts/ig-probe.ts   (the token is never printed)
-import { probeInstagram } from "../src/lib/integrations/instagram";
+import { env } from "../src/lib/env";
+import { probeInstagram, setRequestTrace } from "../src/lib/integrations/instagram";
 
 const mask = (id: string) => (id.length > 6 ? `${id.slice(0, 3)}…${id.slice(-3)}` : "***");
+
+const token = env.IG_MAIN_ACCESS_TOKEN ?? "";
+console.log(`config            IG_GRAPH_HOST=${env.IG_GRAPH_HOST} IG_API_VERSION=${env.IG_API_VERSION} IG_MAIN_USER_ID=${env.IG_MAIN_USER_ID ? "set" : "empty"}`);
+console.log(`token             length ${token.length}, starts with ${token.slice(0, 3) || "-"}${/\s|"|'/.test(token) ? ", CONTAINS WHITESPACE OR QUOTES" : ""}`);
+console.log("requests:");
+setRequestTrace((t) =>
+  console.log(`  ${t.status === 200 ? "OK " : "ERR"} ${t.status}${t.code ? ` code ${t.code}` : ""}  ${t.url}${t.message ? `  — ${t.message}` : ""}`),
+);
 
 probeInstagram()
   .then((p) => {
@@ -14,6 +23,7 @@ probeInstagram()
     console.log(`caption           ${p.hasCaption === null ? "no posts" : p.hasCaption ? "yes" : "NO"}`);
     console.log(`media_product_type ${p.hasMediaProductType === null ? "no posts" : p.hasMediaProductType ? "yes" : "NO"}`);
     console.log(`insights          ${p.insights ? JSON.stringify(p.insights) : "none (null)"}`);
+    console.log(`demographics      ${p.demographics ? JSON.stringify(p.demographics.ageGender.slice(0, 3)) : "none (null)"}`);
   })
   .catch((err) => {
     console.error(`FAILED: ${err instanceof Error ? err.message : err}`);

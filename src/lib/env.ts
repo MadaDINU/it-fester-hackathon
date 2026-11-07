@@ -28,6 +28,8 @@ const EnvSchema = z.object({
   AI_PRICE_FAST_INPUT_EUR_PER_MTOK: num(0.087),
   AI_PRICE_FAST_OUTPUT_EUR_PER_MTOK: num(0.435),
   AI_BUDGET_EUR: num(4),
+  // Per generateJSON call, retries included. 50 s fits Vercel's 60 s routes; raise it locally.
+  AI_TIMEOUT_MS: num(50_000),
   VALUE_HOURLY_RATE_EUR: num(20),
   VALUE_MINUTES_SAVED_PER_CAMPAIGN: num(120),
 
@@ -38,6 +40,7 @@ const EnvSchema = z.object({
   IG_GRAPH_HOST: mode(["auto", "facebook", "instagram"], "auto"),
   IG_API_VERSION: z.preprocess((v) => (v === "" ? undefined : v), z.string().default("v27.0")),
   IG_MAIN_USER_ID: optional,
+  IG_NICHE_BRIEF: optional,
   IG_MAIN_ACCESS_TOKEN: optional,
   IG_PUBLISH_USER_ID: optional,
   IG_PUBLISH_ACCESS_TOKEN: optional,

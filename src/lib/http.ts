@@ -13,6 +13,7 @@ export function failFromError(err: unknown) {
     return fail("budget_exceeded", message, 402);
   }
   if (err instanceof Error && (err.name === "AIError" || err.name === "UpstreamError")) {
+    console.error(`${err.name}: ${message}`);
     return fail("upstream_error", message, 502);
   }
   // Details stay in the server log: internal messages can expose database structure.

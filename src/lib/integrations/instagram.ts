@@ -52,8 +52,31 @@ function client(host: GraphHost, token: string): Client {
   return { host, base: `${ORIGIN[host]}/${env.IG_API_VERSION}`, token };
 }
 
+export type RequestTrace = { url: string; status: number; code?: number; message?: string };
+let trace: ((t: RequestTrace) => void) | null = null;
+
+// Diagnostics for scripts/ig-probe.ts. The access_token parameter is removed before tracing.
+export function setRequestTrace(fn: ((t: RequestTrace) => void) | null) {
+  trace = fn;
+}
+
+function withoutToken(url: string): string {
+  const u = new URL(url);
+  u.searchParams.delete("access_token");
+  return u.toString();
+}
+
 // GET with a 10 s timeout and one retry on 429/5xx or a network error. Errors never contain the URL.
 async function request(url: string): Promise<Json> {
+  const result = await requestOnce(url).catch((err: unknown) => {
+    if (err instanceof InstagramApiError) trace?.({ url: withoutToken(url), status: err.status, code: err.code, message: err.message });
+    throw err;
+  });
+  trace?.({ url: withoutToken(url), status: 200 });
+  return result;
+}
+
+async function requestOnce(url: string): Promise<Json> {
   for (let attempt = 0; ; attempt++) {
     let response: Response;
     try {
@@ -128,10 +151,12 @@ async function facebookProfile(c: Client): Promise<Profile> {
     userId = linked ? String((linked.instagram_business_account as Json).id) : null;
   }
   if (!userId) {
-    // A token issued for the Instagram account itself (Unified Login) can answer /me directly.
-    const me = await get(c, "me", { fields: `id,${PROFILE_FIELDS}` });
-    if (!str(me.username)) throw new InstagramApiError("No Instagram account is linked to this token", 400);
-    return { userId: String(me.id), me, full: true };
+    // A system user token (Unified Login) has no linked Pages, and its /me is the system user,
+    // not the Instagram account, so the account id must come from configuration.
+    throw new InstagramApiError(
+      "No Instagram account found via /me/accounts. Set IG_MAIN_USER_ID to the Instagram professional account id.",
+      400,
+    );
   }
   const { body, full } = await getWithFallback(c, userId, PROFILE_FIELDS, "username,followers_count,media_count");
   return { userId, me: body, full };
@@ -350,6 +375,7 @@ export async function probeInstagram() {
     hasMediaProductType: media ? media.mediaProductType !== null : null,
     latestPost: media?.timestamp ?? null,
     insights: media ? await fetchInsights(c, media.id) : null,
+    demographics: await fetchDemographics(c, profile.userId),
   };
 }
 
