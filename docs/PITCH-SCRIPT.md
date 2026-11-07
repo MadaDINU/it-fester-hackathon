@@ -73,6 +73,25 @@ Regulă: nu spunem nimic ce nu putem arăta. Unde nu știm, spunem „încă nu 
 | Fără internet | Video-ul înregistrat. |
 | Buget AI atins (402) | Arătăm datele deja generate. Nu mărim bugetul în timpul demo-ului. |
 
+**Ce spunem dacă ceva pică, pe pași**
+
+Linkuri pregătite (brand @ironcladwind, deja importat):
+- Brand: http://localhost:3000/brands/cb86e39b-2a6c-439e-8523-c3436354d665
+- Campania pregătită: http://localhost:3000/campaigns/c7c14e83-5edc-494c-a401-80027e94749a
+- Analytics / Community: linkul de brand + `/analytics` / `/community`
+
+Orice schimbare de variabilă se face în `.env.local`, apoi Ctrl+C pe `demo:start` și `npm run demo:start` din nou (fără rebuild, ~5 s).
+
+| Pas | Ce pică | Ce spunem | Ce facem |
+|---|---|---|---|
+| 1 Brand | Instagram API nu răspunde (eroare 502 la „Refresh data”) | „API-ul Meta are o problemă acum; datele importate azi sunt deja în aplicație.” | Nu reimportăm. Deschidem linkul de brand. Dacă trebuie arătat importul: `IG_DATA_MODE=mock` (citește `data/ig-snapshot.json` dacă l-am salvat dimineața cu `ig-snapshot.ts`, altfel datele demo, nu cele reale) și repornim. |
+| 2 Analytics | „Run learning loop” durează sau dă eroare | „Modelul s-a antrenat deja; vă arăt learnings-urile de mai devreme.” | Rămânem pe Analytics și pe Brand Memory: learnings-urile sunt deja salvate și etichetate „[Simulated history]”. |
+| 3 Campanie | Generarea trece de ~60 s sau dă „Request timed out” / 502 | „Creatorul scrie 4 variante cu script complet de reel; ca să nu vă ținem, vă arăt una generată azi pe același cont.” | Deschidem linkul campaniei pregătite. Verificăm înainte că `AI_TIMEOUT_MS=110000` e în `.env.local`. Dacă Anthropic e căzut: `AI_PROVIDER=mock`, repornim; spunem că restul demo-ului folosește date generate mai devreme. |
+| 3 Campanie | Eroare 402 „budget_exceeded” | „Avem un plafon de cost pe AI: aplicația se oprește singură înainte să depășească bugetul. Asta e partea de cost control.” | Deschidem campania pregătită. Nu mărim `AI_BUDGET_EUR` pe scenă. |
+| 4 Publicare | Publish sau Simulate sunt blocate în UI („require M6b/M7”) | „Publicarea e intenționat pe mock: nu postăm nimic pe contul real de 134k în demo. Pentru contul principal e nevoie de confirmare explicită.” | Sărim peste click; arătăm dialogul de confirmare pentru contul principal, dacă e activ, și trecem la Community. |
+| 5 Community | „Run Community agent” dă eroare | „Contul nu are încă comentarii; ideile de loialitate sunt deja generate din audiență.” | Arătăm cele 3 idei de loialitate deja salvate. |
+| Oricare | Fără internet (Supabase și Anthropic au nevoie de rețea) | „Vă arătăm înregistrarea.” | Pornim video-ul de rezervă. |
+
 ## 3. Întrebări probabile din partea juriului
 
 1. **De ce nu folosim direct ChatGPT?** Un chat generează text generic. Loopwise își ia datele din contul real, testează variantele pe persona și pe un model antrenat pe istoricul contului, apoi învață din rezultate. Un chat nu face ciclul ăsta singur.
