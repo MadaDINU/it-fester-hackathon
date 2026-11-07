@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPercent } from "@/components/app/format";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -301,10 +302,7 @@ export function CommunityPage() {
                     <span className="inline-flex size-2 rounded-full bg-success" />
                   </div>
                   <p className="mt-2 text-3xl font-semibold text-success-ink">
-                    {(
-                      (community.summary?.positiveShare ?? stats.positiveShare) * 100
-                    ).toFixed(0)}
-                    %
+                    {formatPercent((community.summary?.positiveShare ?? stats.positiveShare), "ro-RO")}
                   </p>
                   <p className="mt-1 text-xs text-fg-muted">
                     {stats.positive} of {stats.total} comments
@@ -319,10 +317,7 @@ export function CommunityPage() {
                     <span className="inline-flex size-2 rounded-full bg-danger" />
                   </div>
                   <p className="mt-2 text-3xl font-semibold text-danger-ink">
-                    {(
-                      (community.summary?.negativeShare ?? stats.negativeShare) * 100
-                    ).toFixed(0)}
-                    %
+                    {formatPercent((community.summary?.negativeShare ?? stats.negativeShare), "ro-RO")}
                   </p>
                   <p className="mt-1 text-xs text-fg-muted">
                     {stats.negative} of {stats.total} comments
@@ -337,10 +332,7 @@ export function CommunityPage() {
                     <span className="inline-flex size-2 rounded-full bg-primary" />
                   </div>
                   <p className="mt-2 text-3xl font-semibold text-primary-ink">
-                    {(
-                      (community.summary?.questionShare ?? stats.questionShare) * 100
-                    ).toFixed(0)}
-                    %
+                    {formatPercent((community.summary?.questionShare ?? stats.questionShare), "ro-RO")}
                   </p>
                   <p className="mt-1 text-xs text-fg-muted">
                     {stats.questions} questions asked

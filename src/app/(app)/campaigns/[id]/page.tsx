@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPercent, formatR2, formatScore } from "@/components/app/format";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -54,7 +55,7 @@ export default function CampaignStudioPage() {
     setBusy(variantId); setError("");
     try {
       if (kind === "render") { const result = await api.renderVariant(variantId); setImages(current => ({ ...current, [variantId]: result.imageUrl })); toast.success(mockMode ? "Demo JPEG rendered locally; not uploaded" : "Creative saved"); }
-      else if (kind === "simulate") { const publication = publications[variantId]; if (!publication) throw new Error("Publish a mock result first"); const metrics = await api.simulatePublication(publication.id); setSimulated(current => ({ ...current, [variantId]: metrics })); toast.success(`Simulated ER ${(metrics.engagementRate * 100).toFixed(1)}% · ${metrics.reach} reach`); }
+      else if (kind === "simulate") { const publication = publications[variantId]; if (!publication) throw new Error("Publish a mock result first"); const metrics = await api.simulatePublication(publication.id); setSimulated(current => ({ ...current, [variantId]: metrics })); toast.success(`Simulated ER ${formatPercent(metrics.engagementRate, "ro-RO")} · ${metrics.reach} reach`); }
       else { const result = await api.publishVariant(variantId, publicationRequest(campaign.platform, kind === "main" ? "main" : "publish", kind === "main")); setPublications(current => ({ ...current, [variantId]: result })); toast.success(`${result.mode === "mock" ? "Simulated publication" : "Published"} · ${result.account} account`); }
     } catch (e) { setError(e instanceof Error ? e.message : "Action failed"); }
     finally { setBusy(null); }
@@ -62,14 +63,14 @@ export default function CampaignStudioPage() {
   async function learn() {
     if (!campaign) return;
     setBusy("learn"); setError("");
-    try { const result = await api.learn(campaign.brandId); setLearned(true); setBrand(current => current ? { ...current, learnings: result.learnings } : current); toast.success(`Learning loop complete${result.model.r2 === null ? "" : ` · R² ${result.model.r2.toFixed(2)}`}${mockMode ? " · demo model" : ""}`); }
+    try { const result = await api.learn(campaign.brandId); setLearned(true); setBrand(current => current ? { ...current, learnings: result.learnings } : current); toast.success(`Learning loop complete${result.model.r2 === null ? "" : ` · R² ${formatR2(result.model.r2, "ro-RO")}`}${mockMode ? " · demo model" : ""}`); }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to run learning loop"); }
     finally { setBusy(null); }
   }
   if (loading || campaign?.status === "generating") return <main><LoadingState label={loading ? "Loading Campaign Studio…" : "Generating campaign…"} /></main>;
   if (campaign?.status === "failed") return <main><ErrorState message="Campaign generation failed. Please try again." onRetry={() => void load()} /></main>;
   const src = (v: TVariant) => images[v.id] ?? v.imageUrl ?? api.creativeUrl(v.id);
-  const pct = (v: number | null) => v === null ? "—" : `${(v * 100).toFixed(1)}%`;
+  const pct = (v: number | null) => v === null ? "—" : `${formatPercent(v, "ro-RO")}`;
   if (!campaign) return <main>{error && <ErrorState message={error} onRetry={() => void load()} />}</main>;
   const top = rankVariants(campaign.variants)[0];
   const publishedId = Object.keys(publications)[0];
@@ -98,7 +99,7 @@ export default function CampaignStudioPage() {
       const winner = index === 0;
       return <article key={variant.id} aria-label={winner ? `Recommended variant: ${variant.angle}` : variant.angle} style={{ "--lw-delay": `${index * 80}ms` } as CSSProperties} className={`rounded-xl bg-surface ${winner ? "lw-settle border-2 border-primary p-6" : "lw-rise border border-border p-4 sm:p-6"}`}>
         <div className="mb-4 flex flex-wrap items-center gap-2 text-xs font-semibold">
-          {winner ? <><span className="rounded-full bg-primary px-3 py-1 text-white">Recommended</span><span className="font-medium text-fg-muted">Panel {variant.panelScore ?? "—"}/100 + predicted ER {pct(variant.predictedEngagementRate)}</span><InfoTip id="panelScore" /></> : <span className="rounded-full bg-primary-soft px-3 py-1 text-primary-ink">Rank {variant.rank}</span>}
+          {winner ? <><span className="rounded-full bg-primary px-3 py-1 text-white">Recommended</span><span className="font-medium text-fg-muted">Panel {formatScore(variant.panelScore, "ro-RO")}/100 + predicted ER {pct(variant.predictedEngagementRate)}</span><InfoTip id="panelScore" /></> : <span className="rounded-full bg-primary-soft px-3 py-1 text-primary-ink">Rank {variant.rank}</span>}
           <span className="rounded-full border border-border px-3 py-1 text-fg-muted">{variant.format}</span>
         </div>
         <h2 className={`${winner ? "text-xl" : "text-base"} mb-4 font-semibold text-fg`}>{variant.angle}</h2>
@@ -108,11 +109,11 @@ export default function CampaignStudioPage() {
             <p className="mt-2 text-xs text-fg-muted">{variant.format === "reel" ? "Reel cover preview; no video is generated." : "1080 × 1350 creative preview"}</p>
           </div>
           <div className="space-y-4">
-            {winner && variant.panelScore !== null && <div className="flex items-center gap-4"><LoopRing value={variant.panelScore / 100} size={88} label={`Panel score ${variant.panelScore} out of 100`} /><div><p className="text-3xl font-semibold text-fg"><CountUp value={variant.panelScore} format={n => `${Math.round(n)}/100`} /></p><p className="flex items-center gap-1.5 text-xs text-fg-muted">Focus group panel score<InfoTip id="panelScore" /></p></div></div>}
+            {winner && variant.panelScore !== null && <div className="flex items-center gap-4"><LoopRing value={variant.panelScore / 100} size={88} label={`Panel score ${formatScore(variant.panelScore, "ro-RO")} out of 100`} /><div><p className="text-3xl font-semibold text-fg"><CountUp value={variant.panelScore} format={n => `${Math.round(n)}/100`} /></p><p className="flex items-center gap-1.5 text-xs text-fg-muted">Focus group panel score<InfoTip id="panelScore" /></p></div></div>}
             <div><p className="whitespace-pre-wrap text-sm leading-relaxed text-fg">{variant.caption}</p><p className="mt-2 break-words text-sm text-primary-ink">{variant.hashtags.join(" ")}</p></div>
             <dl className={`grid gap-4 rounded-xl border border-border p-4 ${winner && variant.panelScore !== null ? "grid-cols-1" : "grid-cols-2"}`}>
               {!(winner && variant.panelScore !== null) && <div><dt className="flex items-center gap-1.5 text-xs text-fg-muted">Panel score<InfoTip id="panelScore" /></dt><dd className="mt-1 text-2xl font-semibold">{variant.panelScore === null ? "—" : <CountUp value={variant.panelScore} format={n => `${Math.round(n)}/100`} />}</dd><meter className="mt-2 w-full accent-primary" min={0} max={100} value={variant.panelScore ?? 0} aria-label={`Panel score for ${variant.angle}`} /></div>}
-              <div><dt className="flex items-center gap-1.5 text-xs text-fg-muted">Predicted ER<InfoTip id="predictedEr" /></dt><dd className="mt-1 text-2xl font-semibold">{variant.predictedEngagementRate === null ? "—" : <CountUp value={variant.predictedEngagementRate * 100} format={n => `${n.toFixed(1)}%`} />}</dd><p className="mt-2 text-xs text-fg-muted">Suggested hour: {variant.suggestedPostHour === null ? "unavailable" : `${String(variant.suggestedPostHour).padStart(2, "0")}:00`}</p></div>
+              <div><dt className="flex items-center gap-1.5 text-xs text-fg-muted">Predicted ER<InfoTip id="predictedEr" /></dt><dd className="mt-1 text-2xl font-semibold">{variant.predictedEngagementRate === null ? "—" : <CountUp value={variant.predictedEngagementRate * 100} format={n => formatPercent(n, "ro-RO", { alreadyPercent: true })} />}</dd><p className="mt-2 text-xs text-fg-muted">Suggested hour: {variant.suggestedPostHour === null ? "unavailable" : `${String(variant.suggestedPostHour).padStart(2, "0")}:00`}</p></div>
             </dl>
             {variant.appliedLearningIds.length > 0 && <div className="flex flex-wrap gap-2">{variant.appliedLearningIds.map(learningId => <Tooltip key={learningId}><TooltipTrigger className="min-h-11 rounded-full bg-primary-soft px-3 text-xs font-medium text-primary-ink">Uses learning</TooltipTrigger><TooltipContent>{brand?.learnings.find(l => l.id === learningId)?.insight ?? "Learning details unavailable"}</TooltipContent></Tooltip>)}</div>}
           </div>
@@ -127,7 +128,7 @@ export default function CampaignStudioPage() {
         {publications[variant.id] && <p role="status" className="mt-2 text-xs text-fg-muted">{publications[variant.id].mode} publication · {publications[variant.id].account} account · {publications[variant.id].status}</p>}
         <div className="mt-4 space-y-3">
           {variant.reelScript && <details open={winner} className="rounded-xl border border-border"><summary className="flex min-h-11 cursor-pointer list-none items-center px-4 text-sm font-semibold">Reel storyboard · {variant.reelScript.durationSeconds}s<ChevronDown className="lw-chevron ml-auto size-4 text-fg-muted" aria-hidden="true" /></summary><div className="px-4 pb-4"><ReelStoryboard script={variant.reelScript} /></div></details>}
-          <details className="rounded-xl border border-border"><summary className="flex min-h-11 cursor-pointer list-none items-center px-4 text-sm font-semibold"><span className="flex items-center gap-2">Focus group · {variant.panel.length} reactions<InfoTip id="focusGroup" /></span><ChevronDown className="lw-chevron ml-auto size-4 text-fg-muted" aria-hidden="true" /></summary><div className="grid gap-3 px-4 pb-4 md:grid-cols-2">{variant.panel.map(reaction => <blockquote key={reaction.personaId} className="rounded-lg border border-border p-4"><p className={`text-xs font-semibold ${reaction.sentiment === "positive" ? "text-success-ink" : reaction.sentiment === "negative" ? "text-danger-ink" : "text-fg-muted"}`}>{reaction.personaName} · {reaction.sentiment}</p><p className="my-3 text-sm leading-relaxed">“{reaction.quote}”</p><label className="text-xs">Stop score {reaction.stopScore}/10<meter className="mt-1 block w-full accent-primary" min={0} max={10} value={reaction.stopScore} /></label>{reaction.objection && <p className="mt-3 text-xs text-fg-muted">Objection: {reaction.objection}</p>}</blockquote>)}</div></details>
+          <details className="rounded-xl border border-border"><summary className="flex min-h-11 cursor-pointer list-none items-center px-4 text-sm font-semibold"><span className="flex items-center gap-2">Focus group · {variant.panel.length} reactions<InfoTip id="focusGroup" /></span><ChevronDown className="lw-chevron ml-auto size-4 text-fg-muted" aria-hidden="true" /></summary><div className="grid gap-3 px-4 pb-4 md:grid-cols-2">{variant.panel.map(reaction => <blockquote key={reaction.personaId} className="rounded-lg border border-border p-4"><p className={`text-xs font-semibold ${reaction.sentiment === "positive" ? "text-success-ink" : reaction.sentiment === "negative" ? "text-danger-ink" : "text-fg-muted"}`}>{reaction.personaName} · {reaction.sentiment}</p><p className="my-3 text-sm leading-relaxed">“{reaction.quote}”</p><label className="text-xs">Stop score {formatScore(reaction.stopScore, "ro-RO")}/10<meter className="mt-1 block w-full accent-primary" min={0} max={10} value={reaction.stopScore} /></label>{reaction.objection && <p className="mt-3 text-xs text-fg-muted">Objection: {reaction.objection}</p>}</blockquote>)}</div></details>
         </div>
       </article>;
     })}</div>}</main>;

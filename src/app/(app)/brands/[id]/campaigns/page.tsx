@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney, formatMultiple, formatScore } from "@/components/app/format";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -15,7 +16,7 @@ import { calculateRoi } from "@/components/app/roi";
 
 type Filter = "all" | TCampaign["status"];
 const FILTERS: Filter[] = ["all", "ready", "published", "generating", "failed"];
-const eur = (v: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: v > 0 && v < 1 ? 3 : 2 }).format(v);
+const eur = (v: number) => formatMoney(v, "ro-RO");
 function roi(c: TCampaign, cv: TCostValue | null) {
   if (!cv) return null;
   try { return calculateRoi({ campaigns: 1, minutesSavedPerCampaign: cv.assumptions.minutesSavedPerCampaign, hourlyRate: cv.assumptions.hourlyRateEur, aiCostPerCampaign: c.aiCost.costEur, planPrice: 0 }).roiMultiple; } catch { return null; }
@@ -57,15 +58,15 @@ export default function CampaignsPage() {
                     <td className="max-w-xs px-4 py-3"><Link href={`/campaigns/${c.id}`} onClick={e => e.stopPropagation()} className="line-clamp-2 font-medium text-fg hover:text-primary-ink">{c.brief}</Link></td>
                     <td className="whitespace-nowrap px-4 py-3 text-fg-muted">{c.formats.join(" + ")}</td>
                     <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
-                    <td className="max-w-[14rem] px-4 py-3">{top ? <><p className="line-clamp-1 text-fg">{top.angle}</p><p className="text-xs text-fg-muted">Panel {top.panelScore ?? "—"}/100</p></> : <span className="text-fg-muted">—</span>}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-fg-muted">{eur(c.aiCost.costEur)}{multiple !== null && <> · <strong className="font-semibold text-primary-ink">×{multiple.toFixed(0)}</strong></>}</td>
+                    <td className="max-w-[14rem] px-4 py-3">{top ? <><p className="line-clamp-1 text-fg">{top.angle}</p><p className="text-xs text-fg-muted">Panel {formatScore(top.panelScore, "ro-RO")}/100</p></> : <span className="text-fg-muted">—</span>}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-fg-muted">{eur(c.aiCost.costEur)}{multiple !== null && <> · <strong className="font-semibold text-primary-ink">{formatMultiple(multiple, "ro-RO")}</strong></>}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-fg-muted">{date(c.createdAt)}</td>
                     <td className="pr-4"><ChevronRight className="size-4 text-fg-muted" aria-hidden="true" /></td>
                   </tr>;
                 })}</tbody>
               </table>
             </div>
-            <ul className="space-y-3 md:hidden">{shown.map(c => { const top = winner(c); const multiple = roi(c, costValue); return <li key={c.id}><Link href={`/campaigns/${c.id}`} className="block rounded-xl border border-border bg-surface p-4"><div className="flex items-start justify-between gap-3"><p className="line-clamp-2 text-sm font-medium text-fg">{c.brief}</p><StatusBadge status={c.status} /></div>{top && <p className="mt-2 line-clamp-1 text-xs text-fg-muted">Recommended: {top.angle} · panel {top.panelScore ?? "—"}/100</p>}<p className="mt-2 text-xs text-fg-muted">{c.formats.join(" + ")} · {eur(c.aiCost.costEur)}{multiple !== null && ` · ROI ×${multiple.toFixed(0)}`} · {date(c.createdAt)}</p></Link></li>; })}</ul>
+            <ul className="space-y-3 md:hidden">{shown.map(c => { const top = winner(c); const multiple = roi(c, costValue); return <li key={c.id}><Link href={`/campaigns/${c.id}`} className="block rounded-xl border border-border bg-surface p-4"><div className="flex items-start justify-between gap-3"><p className="line-clamp-2 text-sm font-medium text-fg">{c.brief}</p><StatusBadge status={c.status} /></div>{top && <p className="mt-2 line-clamp-1 text-xs text-fg-muted">Recommended: {top.angle} · panel {formatScore(top.panelScore, "ro-RO")}/100</p>}<p className="mt-2 text-xs text-fg-muted">{c.formats.join(" + ")} · {eur(c.aiCost.costEur)}{multiple !== null && ` · ROI ${formatMultiple(multiple, "ro-RO")}`} · {date(c.createdAt)}</p></Link></li>; })}</ul>
           </>}
         <p className="text-xs text-fg-muted">ROI is an estimate of time saved against AI cost, not revenue. Imported post history is in Analytics.</p>
       </div>)}
