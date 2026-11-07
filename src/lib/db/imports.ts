@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { TIgMedia, TVariant } from "@/lib/contracts";
+import type { FeatureInput } from "@/lib/ml/features";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export type ImportedPost = {
@@ -111,6 +112,58 @@ export async function upsertImportedPosts(
     })),
   );
   if (metrics.error) throw new Error(metrics.error.message);
+}
+
+export type MeasuredPost = {
+  input: FeatureInput;
+  engagementRate: number;
+  source: "live" | "seeded" | "simulated";
+};
+
+type MetricJoin = {
+  publication_id: string;
+  engagement_rate: number;
+  source: MeasuredPost["source"];
+  publications: {
+    variants: {
+      format: FeatureInput["format"];
+      caption: string;
+      hashtags: string[];
+      panel_score: number | null;
+      suggested_post_hour: number | null;
+    };
+  };
+};
+
+// Every post of the brand with a measured reach, using each publication's latest metrics.
+export async function listMeasuredPosts(brandId: string): Promise<MeasuredPost[]> {
+  const { data, error } = await supabaseAdmin
+    .from("metrics")
+    .select(
+      "publication_id, engagement_rate, source, publications!inner(variants!inner(format, caption, hashtags, panel_score, suggested_post_hour, campaigns!inner(brand_id)))",
+    )
+    .eq("publications.variants.campaigns.brand_id", brandId)
+    .gt("reach", 0)
+    .order("captured_at");
+  if (error) throw new Error(error.message);
+
+  const latest = new Map<string, MetricJoin>();
+  for (const row of data as unknown as MetricJoin[]) latest.set(row.publication_id, row);
+
+  return [...latest.values()].map((row) => {
+    const v = row.publications.variants;
+    return {
+      input: {
+        caption: v.caption,
+        hashtags: v.hashtags,
+        panelScore: v.panel_score === null ? null : Number(v.panel_score),
+        format: v.format,
+        postHour: v.suggested_post_hour,
+      },
+      engagementRate: Number(row.engagement_rate),
+      source: row.source,
+    };
+  });
 }
 
 export async function countImportedPosts(brandId: string): Promise<number> {

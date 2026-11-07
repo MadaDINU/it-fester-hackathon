@@ -41,7 +41,16 @@ Rules:
 - Personas should disagree where their motivations differ. quote is what they would say, in the brand's language. objection is null if they have none.
 Output JSON shape: {"reactions":[{variantIndex,personaId,stopScore,sentiment:"positive"|"neutral"|"negative",quote,objection}]}`;
 
-const PersonaDraft =Persona.omit({ id: true, brandId: true });
+export const LEARNING_SYSTEM = `You are the Analyst agent of a social media growth team. Find what actually drives engagement on this account.
+Rules:
+- Return 3-5 learnings. Each is one actionable instruction for the next campaign.
+- evidence must cite numbers taken from the table or the model weights. Never invent or estimate a number.
+- Weights are in log(engagement rate) space; the model's r2 tells you how much to trust them. Set confidence accordingly: with few posts or a low r2, do not use "high".
+- Comparisons must state the group sizes. Say so when a group is too small to conclude anything.
+- Write in the account's language; keep JSON keys in English.
+Output JSON shape: {"learnings":[{"insight":"...","evidence":"...","confidence":"low"|"medium"|"high"}]}`;
+
+const PersonaDraft = Persona.omit({ id: true, brandId: true });
 
 export const AudienceOutput = z.object({
   dna: BrandDNA,
