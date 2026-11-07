@@ -14,6 +14,8 @@ export function AdobeEditButton({ variant, imageSrc, disabled, onSaved }: { vari
   if (!clientId) return null;
   const reel = variant.format === "reel";
   async function edit() {
+    // Adobe only allows its editor to be framed by https pages; on http the iframe is blocked silently.
+    if (window.location.protocol !== "https:") { toast.error("Adobe Express needs HTTPS. Open Loopwise on its https:// address to edit this creative."); return; }
     setWorking(true);
     try {
       const edited = await editImageInAdobe(clientId, await imageToBase64(imageSrc));
