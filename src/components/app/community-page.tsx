@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/app/page-states";
-import { BrandNav } from "@/components/app/brand-nav";
+import { NewCampaignButton } from "@/components/app/brand-sidebar";
 import {
   computeCommentStats,
   filterComments,
@@ -196,10 +196,10 @@ export function CommunityPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        breadcrumb
         title="Community & Loyalty"
-        description="Listen to audience conversations, review and approve AI response suggestions, and turn community feedback into high-converting loyalty campaigns."
-        action={
+        description="Read what your audience says, reply with AI suggestions and turn feedback into loyalty campaigns."
+        action={<>
+          <NewCampaignButton brandId={id} primary={false} />
           <Button
             className="min-h-11 gap-2"
             disabled={busy !== null || loading}
@@ -216,11 +216,10 @@ export function CommunityPage() {
                 Run Community agent
               </>
             )}
-          </Button>
+          </Button></>
         }
       />
 
-      <BrandNav brandId={id} />
       {isFallbackMode && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
           <p className="font-medium">Backend Endpoint Standby</p>
@@ -462,7 +461,7 @@ export function CommunityPage() {
                       Clear all filters
                     </Button>
                   ) : (
-                    <Button onClick={() => void runAgent()} disabled={busy !== null}>
+                    <Button variant="outline" onClick={() => void runAgent()} disabled={busy !== null}>
                       Run Community agent
                     </Button>
                   )
@@ -648,7 +647,7 @@ export function CommunityPage() {
                 title="No loyalty ideas generated"
                 description="Run the Community agent to synthesize audience questions into tailored loyalty campaigns."
                 action={
-                  <Button onClick={() => void runAgent()} disabled={busy !== null}>
+                  <Button variant="outline" onClick={() => void runAgent()} disabled={busy !== null}>
                     Generate ideas
                   </Button>
                 }
