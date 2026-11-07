@@ -12,3 +12,12 @@ it("averages actual observed values per format rather than predictions", () => {
 it("does not connect a prediction line across missing samples", () => {
   expect(lineSegments([null, 0.1, 0.2, null, 0.3])).toEqual([[{ index: 1, value: 0.1 }, { index: 2, value: 0.2 }], [{ index: 4, value: 0.3 }]]);
 });
+
+it("treats a missing, unscored or under-sampled model as cold start", async () => {
+  const { isColdStartModel } = await import("./analytics-data");
+  const { mockFreshDashboard } = await import("@/lib/mock/fresh-account");
+  expect(isColdStartModel(mockFreshDashboard.model)).toBe(true);
+  expect(isColdStartModel(null)).toBe(true);
+  expect(isColdStartModel({ r2: 0.4, samples: 7 })).toBe(true);
+  expect(isColdStartModel({ r2: 0.4, samples: 8 })).toBe(false);
+});

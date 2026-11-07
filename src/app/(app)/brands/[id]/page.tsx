@@ -8,6 +8,7 @@ import { Brain, RefreshCw, Plus, ArrowUpRight } from "lucide-react";
 import type { TBrandWithContext, TCampaign } from "@/lib/contracts";
 import { api } from "@/lib/api-client";
 import { loadBrandWorkspace } from "@/components/app/brand-data";
+import { COLD_START_LABEL, isColdStartModel } from "@/components/app/analytics-data";
 import { BrandDnaPanel, AudiencePanels, PersonaCards, SectionCard } from "@/components/app/intelligence-panels";
 import { Button } from "@/components/ui/button";
 import { ErrorState, LoadingState, PageHeader } from "@/components/app/page-states";
@@ -35,7 +36,7 @@ export default function BrandPage() {
   }
   async function learn() {
     setBusy("learn"); setError("");
-    try { const result = await api.learn(id); setBrand(current => current ? { ...current, learnings: result.learnings } : current); toast.success(`Learning loop complete · R² ${result.model.r2 === null ? "not available" : result.model.r2.toFixed(2)}${process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? " · demo model" : ""}`); }
+    try { const result = await api.learn(id); setBrand(current => current ? { ...current, learnings: result.learnings } : current); toast.success(`Learning loop complete · ${isColdStartModel(result.model) || result.model.r2 === null ? COLD_START_LABEL : `R² ${result.model.r2.toFixed(2)}`}${process.env.NEXT_PUBLIC_USE_MOCKS === "true" ? " · demo model" : ""}`); }
     catch (e) { setError(e instanceof Error ? e.message : "Unable to run learning loop"); }
     finally { setBusy(null); }
   }

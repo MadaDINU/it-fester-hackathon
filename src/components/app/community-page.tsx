@@ -35,6 +35,7 @@ import {
   computeCommentStats,
   filterComments,
   formatMechanic,
+  isFreshCommunity,
   loyaltyCampaignUrl,
   type CommentFilters,
   type CommunityComment,
@@ -293,6 +294,10 @@ export function CommunityPage() {
         <LoadingState label="Loading community conversations and sentiment…" />
       ) : community ? (
         <div className="space-y-10">
+          {isFreshCommunity(community) ? (
+            <EmptyState title="No comments yet" description="When people start commenting on your posts, sentiment, questions and AI reply drafts appear here. Until then, use a loyalty idea below to start the conversation." />
+          ) : (
+          <>
           {/* Section 1: Community Pulse & Sentiment Summary */}
           <section aria-labelledby="community-summary">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
@@ -642,6 +647,8 @@ export function CommunityPage() {
               </div>
             )}
           </section>
+          </>
+          )}
 
           {/* Section 3: Loyalty & Community Ideas */}
           <section aria-labelledby="loyalty-title">

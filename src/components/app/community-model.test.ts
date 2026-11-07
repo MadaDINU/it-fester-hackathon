@@ -4,6 +4,7 @@ import {
   computeCommentStats,
   filterComments,
   formatMechanic,
+  isFreshCommunity,
   loyaltyCampaignUrl,
 } from "./community-model";
 
@@ -48,6 +49,17 @@ const comments: SampleComment[] = [
 ];
 
 describe("community-model", () => {
+  it("identifies a fresh community when comments are empty and summary is null", () => {
+    expect(isFreshCommunity({ comments: [], summary: null })).toBe(true);
+    expect(isFreshCommunity({ comments: [{ id: "1" }], summary: null })).toBe(false);
+    expect(
+      isFreshCommunity({
+        comments: [],
+        summary: { positiveShare: 1, negativeShare: 0, questionShare: 0, topTopics: [] },
+      })
+    ).toBe(false);
+  });
+
   it("filters comments by sentiment, case-insensitive text, topic, and questions without mutation", () => {
     expect(
       filterComments(comments, { sentiment: "all", query: "BREW", questionsOnly: true }).map((c) => c.id)
