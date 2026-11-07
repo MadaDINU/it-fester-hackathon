@@ -15,8 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://loopwise-ruddy.vercel.app"),
   title: "Loopwise",
   description: "AI growth agents for social media, built on real Instagram data.",
+  openGraph: {
+    title: "Loopwise",
+    description: "AI growth agents for social media, built on real Instagram data.",
+    images: ["/brand/loopwise-icon.png"],
+  },
 };
 
 export default function RootLayout({

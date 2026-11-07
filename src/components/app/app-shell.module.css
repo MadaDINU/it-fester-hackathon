@@ -10,7 +10,6 @@
 .header { background: #fff; border-bottom: 1px solid #e6e7ed; }
 .headerInner { max-width: 1280px; margin: auto; padding: 20px 40px; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
 .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 750; font-size: 24px; letter-spacing: -1px; }
-.logoMark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; background: #7c3aed; color: #fff; }
 .wordmarkDot { margin-left: -10px; color: #7c3aed; }
 .nav { display: flex; gap: 8px; }
 .nav a { min-height: 44px; padding: 10px 16px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; color: #555b69; font-size: 14px; font-weight: 600; }
